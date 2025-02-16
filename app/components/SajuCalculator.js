@@ -54,7 +54,7 @@ export const calculateDayPillar = (year, month, day) => {
  */
 export const calculateHourPillar = (daySky, timeStr) => {
   const timeToJiMap = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
-  const [hour, min] = timeStr.split(":").map(Number);
+  const [hour] = timeStr.split(":").map(Number);
   const timeIndex = Math.floor(hour / 2) % 12;
 
   // 일간에 따른 시간(天干) 설정
