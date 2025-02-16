@@ -54,7 +54,6 @@ export const calculateDayPillar = (year, month, day) => {
  */
 export const calculateHourPillar = (daySky, timeStr) => {
   const timeToJiMap = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
-  const hourToGanOffset = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1];
   const [hour, min] = timeStr.split(":").map(Number);
   const timeIndex = Math.floor(hour / 2) % 12;
 
