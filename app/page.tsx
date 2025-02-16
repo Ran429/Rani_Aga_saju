@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { getSaju } from "./components/SajuCalculator";
 
-const elementColors = {
+// 사주 오행별 색상 정의
+const elementColors: Record<"목" | "화" | "토" | "금" | "수", string> = {
   목: "#228B22", // 초록색
   화: "#FF4500", // 빨간색
   토: "#D2B48C", // 황토색
@@ -11,34 +12,41 @@ const elementColors = {
   수: "#1E90FF", // 파란색
 };
 
-const getElement = (char) => {
+// getElement 함수 수정: 빈 문자열을 방지
+const getElement = (char: string): keyof typeof elementColors | undefined => {
   if (["갑", "을", "인", "묘"].includes(char)) return "목";
   if (["병", "정", "사", "오"].includes(char)) return "화";
   if (["무", "기", "진", "술", "축", "미"].includes(char)) return "토";
-  if (["경", "신", "신", "유"].includes(char)) return "금";
+  if (["경", "신", "유"].includes(char)) return "금";
   if (["임", "계", "자", "해"].includes(char)) return "수";
-  return "";
+  return undefined;
+};
+
+// 사주 데이터 타입 정의
+type SajuType = {
+  hour: { sky: string; ground: string };
+  day: { sky: string; ground: string };
+  month: { sky: string; ground: string };
+  year: { sky: string; ground: string };
 };
 
 export default function Home() {
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
-  const [calendarType, setCalendarType] = useState("solar");
-  const [gender, setGender] = useState("male");
-  const [sajuResult, setSajuResult] = useState(null);
+  const [sajuResult, setSajuResult] = useState<SajuType | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!birthDate || !birthTime) {
       alert("생년월일과 시간을 입력하세요!");
       return;
     }
-    const result = getSaju(birthDate, birthTime, calendarType, gender);
+    const result = getSaju(birthDate, birthTime);
     setSajuResult(result);
   };
 
@@ -47,23 +55,6 @@ export default function Home() {
       <h1 className="text-3xl font-bold text-blue-600">사주 입력</h1>
 
       <form className="mt-6 bg-white p-6 shadow-lg rounded-lg w-full max-w-md space-y-4" onSubmit={handleSubmit}>
-        {/* 🟢 줄바꿈 추가: 입력 필드를 세로로 정렬 */}
-        <div className="flex flex-col">
-          <label className="font-semibold">양력/음력</label>
-          <select className="p-2 border rounded" value={calendarType} onChange={(e) => setCalendarType(e.target.value)}>
-            <option value="solar">양력</option>
-            <option value="lunar">음력</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="font-semibold">성별 선택</label>
-          <select className="p-2 border rounded" value={gender} onChange={(e) => setGender(e.target.value)}>
-            <option value="male">남자</option>
-            <option value="female">여자</option>
-          </select>
-        </div>
-
         <div className="flex flex-col">
           <label className="font-semibold">생년월일</label>
           <input className="p-2 border rounded" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required />
@@ -83,16 +74,32 @@ export default function Home() {
           <table className="w-full border-collapse border border-gray-400 text-center text-lg font-bold">
             <tbody>
               <tr>
-                {['hour', 'day', 'month', 'year'].map((pillar) => (
-                  <td key={pillar} className="border border-gray-400 p-2" style={{ color: elementColors[getElement(sajuResult[pillar].sky)] }}>
-                    {sajuResult[pillar].sky}
+                {(["hour", "day", "month", "year"] as (keyof SajuType)[]).map((pillar) => (
+                  <td
+                    key={pillar}
+                    className="border border-gray-400 p-2"
+                    style={{
+                      color: sajuResult[pillar]
+                        ? elementColors[getElement(sajuResult[pillar].sky) ?? "목"]
+                        : "#000",
+                    }}
+                  >
+                    {sajuResult[pillar]?.sky ?? ""}
                   </td>
                 ))}
               </tr>
               <tr>
-                {['hour', 'day', 'month', 'year'].map((pillar) => (
-                  <td key={pillar} className="border border-gray-400 p-2" style={{ color: elementColors[getElement(sajuResult[pillar].ground)] }}>
-                    {sajuResult[pillar].ground}
+                {(["hour", "day", "month", "year"] as (keyof SajuType)[]).map((pillar) => (
+                  <td
+                    key={pillar}
+                    className="border border-gray-400 p-2"
+                    style={{
+                      color: sajuResult[pillar]
+                        ? elementColors[getElement(sajuResult[pillar].ground) ?? "목"]
+                        : "#000",
+                    }}
+                  >
+                    {sajuResult[pillar]?.ground ?? ""}
                   </td>
                 ))}
               </tr>
