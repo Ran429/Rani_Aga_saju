@@ -3,13 +3,21 @@
 import { useState, useEffect } from "react";
 import { getSaju } from "./components/SajuCalculator";
 
+// 사주 데이터 타입 정의
+type SajuType = {
+  year: { sky: string; ground: string };
+  month: { sky: string; ground: string };
+  day: { sky: string; ground: string };
+  hour: { sky: string; ground: string };
+};
+
 // 사주 오행별 색상 정의
 const elementColors: Record<"목" | "화" | "토" | "금" | "수", string> = {
-  목: "#228B22", // 초록색
-  화: "#FF4500", // 빨간색
-  토: "#D2B48C", // 황토색
-  금: "#A9A9A9", // 회색
-  수: "#1E90FF", // 파란색
+  목: "text-green-600", // 초록색
+  화: "text-red-600", // 빨간색
+  토: "text-yellow-600", // 황토색
+  금: "text-gray-600", // 회색
+  수: "text-blue-600", // 파란색
 };
 
 // getElement 함수 수정: 빈 문자열을 방지
@@ -22,14 +30,45 @@ const getElement = (char: string): keyof typeof elementColors | undefined => {
   return undefined;
 };
 
-// 사주 데이터 타입 정의
-type SajuType = {
-  hour: { sky: string; ground: string };
-  day: { sky: string; ground: string };
-  month: { sky: string; ground: string };
-  year: { sky: string; ground: string };
-};
+// 일주 동물 및 프레임 색상 반환 함수
+const getAnimalAndColor = (daySky: string, dayGround: string) => {
+  const animals: Record<string, string> = {
+    자: "쥐", 축: "소", 인: "호랑이", 묘: "토끼", 진: "용",
+    사: "뱀", 오: "말", 미: "양", 신: "원숭이", 유: "닭",
+    술: "개", 해: "돼지"
+  };
 
+  const imageNames: Record<string, string> = {
+    쥐: "Rat", 소: "Ox", 호랑이: "Tiger", 토끼: "Rabbit", 용: "Dragon",
+    뱀: "Snake", 말: "Horse", 양: "Goat", 원숭이: "Monkey", 닭: "Rooster",
+    개: "Dog", 돼지: "Pig"
+  };
+
+  const element = getElement(daySky);
+  const colorPrefix: Record<string, string> = {
+    목: "푸른 ",
+    화: "붉은 ",
+    토: "노란 ",
+    금: "흰 ",
+    수: "검은 "
+  };
+
+  const koreanAnimal = animals[dayGround] || "";
+  const englishAnimal = imageNames[koreanAnimal] || "default"; // undefined 방지
+  const imageUrl = `https://raw.githubusercontent.com/Ran429/Rani_Aga_suju/main/img/${englishAnimal}.webp`;
+
+  // 🔥 디버깅을 위해 콘솔 로그 추가
+  console.log("dayGround:", dayGround);
+  console.log("koreanAnimal:", koreanAnimal);
+  console.log("englishAnimal:", englishAnimal);
+  console.log("imageUrl:", imageUrl);
+
+  return {
+    animal: `${colorPrefix[element || ""] || ""}${koreanAnimal}`,
+    color: element ? elementColors[element] : "#000",
+    imageUrl
+  };
+};
 export default function Home() {
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
@@ -51,13 +90,20 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-blue-600">사주 입력</h1>
-
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-purple-900 via-blue-700 to-pink-600 p-6 font-[Pretendard-Regular]">
+      <h1 className="text-4xl font-extrabold text-white">샤머니즘의 모·든·것</h1>
+      
       <form className="mt-6 bg-white p-6 shadow-lg rounded-lg w-full max-w-md space-y-4" onSubmit={handleSubmit}>
         <div className="flex flex-col">
           <label className="font-semibold">생년월일</label>
-          <input className="p-2 border rounded" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required />
+          <input 
+            className="p-2 border rounded" 
+            type="text" 
+            value={birthDate} 
+            onChange={(e) => setBirthDate(e.target.value.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"))} 
+            placeholder="YYYYMMDD 입력 가능" 
+            required 
+          />
         </div>
 
         <div className="flex flex-col">
@@ -65,47 +111,19 @@ export default function Home() {
           <input className="p-2 border rounded" type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)} required />
         </div>
 
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded w-full">운세 확인</button>
+        <button type="submit" className="bg-blue-500 text-white p-2 rounded w-full hover:bg-blue-600">운세 확인</button>
       </form>
 
       {isClient && sajuResult && (
-        <div className="mt-6 bg-white p-4 shadow-lg rounded-lg w-full max-w-md">
-          <h2 className="text-xl font-bold text-blue-600 text-center">정통사주 결과</h2>
-          <table className="w-full border-collapse border border-gray-400 text-center text-lg font-bold">
-            <tbody>
-              <tr>
-                {(["hour", "day", "month", "year"] as (keyof SajuType)[]).map((pillar) => (
-                  <td
-                    key={pillar}
-                    className="border border-gray-400 p-2"
-                    style={{
-                      color: sajuResult[pillar]
-                        ? elementColors[getElement(sajuResult[pillar].sky) ?? "목"]
-                        : "#000",
-                    }}
-                  >
-                    {sajuResult[pillar]?.sky ?? ""}
-                  </td>
-                ))}
-              </tr>
-              <tr>
-                {(["hour", "day", "month", "year"] as (keyof SajuType)[]).map((pillar) => (
-                  <td
-                    key={pillar}
-                    className="border border-gray-400 p-2"
-                    style={{
-                      color: sajuResult[pillar]
-                        ? elementColors[getElement(sajuResult[pillar].ground) ?? "목"]
-                        : "#000",
-                    }}
-                  >
-                    {sajuResult[pillar]?.ground ?? ""}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <>
+          {/* 일주 동물 표시 */}
+          <div className="mt-6 flex flex-col items-center">
+            <div className="w-32 h-32 rounded-full border-4 flex items-center justify-center" style={{ borderColor: getAnimalAndColor(sajuResult.day.sky, sajuResult.day.ground).color }}>
+              <img src={getAnimalAndColor(sajuResult.day.sky, sajuResult.day.ground).imageUrl} alt="Saju Animal" className="w-28 h-28 rounded-full" />
+            </div>
+            <p className="text-white text-lg font-bold mt-2">{getAnimalAndColor(sajuResult.day.sky, sajuResult.day.ground).animal}</p>
+          </div>
+        </>
       )}
     </div>
   );
