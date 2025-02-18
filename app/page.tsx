@@ -378,7 +378,7 @@ export default function Home() {
             <span className="font-bold">{userName}</span>님의 일주 동물은 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>입니다. <br />
             먼저, 일주 기억하시죠? {userName}님의 일주는 {daySky}{dayGround}였어요.<br />
             사주는 오행을 기반으로 해석하는데요. <br />
-            오행(목,화,토,금,수) 중에 일간인 '"{daySky}"'는 {dayElement}이죠. <br />
+            오행(목,화,토,금,수) 중에 일간인 &quot;{daySky}&quot;는 {dayElement}이죠. <br />
             해당하는 오행의 색을 가져오고, <br />
             일지인 &quot;{dayGround}&quot;의 동물을 합치면 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>이 됩니다.<br />
           </p>
