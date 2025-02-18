@@ -315,14 +315,14 @@ export default function Home() {
         <p className="text-sm text-left text-gray-700 mt-4 break-words">
           <span className="font-bold">{userName}</span>님의 사주를 살펴볼까요?  <br />
           예를 들어, <span className="font-semibold text-gray-700">일간(일주의 천간)</span>은 
-          <span className="font-semibold text-gray-700"> "{daySky}"</span>이 되고,  <br />
+          <span className="font-semibold text-gray-700"> &quot;{daySky}&quot;</span>이 되고,  <br />
           <span className="font-semibold text-gray-700"> 일지(일주의 지지)</span>는 
-          <span className="font-semibold text-gray-700"> "{dayGround}"</span>가 된답니다.  
+          <span className="font-semibold text-gray-700"> &quot;{dayGround}&quot;</span>가 된답니다.  
           <br /><br />
           
           {/* 🔥 저장된 일주를 불러와 예시로 추가 */}
           <span className="font-bold">{userName}</span>님의 일주는  
-          <span className="text-lg font-bold text-blue-600">"{daySky}{dayGround}"</span>가 됩니다.  
+          <span className="text-lg font-bold text-blue-600">&quot;{daySky}{dayGround}&quot;</span>가 됩니다.  
           <br /><br />
 
           {/* 🌿 년주~시주의 의미 추가 */}
@@ -348,7 +348,7 @@ export default function Home() {
             <span className="text-sm font-bold text-gray-700">1-2. 일주(日柱)란?</span><br />  
             일주는 태어난 날의 천간과 지지(간지)를 의미하며,<br />  
             이는 자신을 대표하는 가장 중요한 요소입니다.<br /><br />
-            즉, <span className="font-bold">{userName}</span>님의 일주는 "{daySky}{dayGround} 일주"로,<br />  
+            즉, <span className="font-bold">{userName}</span>님의 일주는 &quot;{daySky}{dayGround} 일주&quot;로,<br />  
             해당 일주를 가진 사람들은 특정한 성향과 특징을 공유합니다.  
             <br /><br />
 
@@ -378,9 +378,9 @@ export default function Home() {
             <span className="font-bold">{userName}</span>님의 일주 동물은 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>입니다. <br />
             먼저, 일주 기억하시죠? {userName}님의 일주는 {daySky}{dayGround}였어요.<br />
             사주는 오행을 기반으로 해석하는데요. <br />
-            오행(목,화,토,금,수) 중에 일간인 "{daySky}"는 {dayElement}이죠. <br />
+            오행(목,화,토,금,수) 중에 일간인 '"{daySky}"'는 {dayElement}이죠. <br />
             해당하는 오행의 색을 가져오고, <br />
-            일지인 "{dayGround}"의 동물을 합치면 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>이 됩니다.<br />
+            일지인 &quot;{dayGround}&quot;의 동물을 합치면 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>이 됩니다.<br />
           </p>
         </div>
       </div>
