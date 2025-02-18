@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { getSaju } from "./components/SajuCalculator";
+import Image from 'next/image';
 
 // 사주 데이터 타입 정의
 type SajuType = {
@@ -113,7 +114,7 @@ export default function Home() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    let missingFields = [];
+    const missingFields = [];
     if (!userName) missingFields.push("이름");
     if (!birthDate) missingFields.push("생년월일");
     if (!birthTime) missingFields.push("출생 시간");
@@ -362,8 +363,10 @@ export default function Home() {
         <div className="mt-4 flex flex-col items-center">
           {/* 일주 동물 아이콘 */}
           <div className={`w-32 h-32 rounded-full border-4 flex items-center justify-center overflow-hidden ${elementColors[dayElement]}`}>
-            <img src={animalData.imageUrl} 
+            <Image src={animalData.imageUrl} 
                  alt="Saju Animal" 
+                 width={128}
+                 height={128} 
                  className="w-full h-full object-contain" />
           </div>
 
