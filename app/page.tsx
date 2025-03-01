@@ -75,7 +75,7 @@ export default function Home() {
   useEffect(() => {
     setIsClient(true);
   }, []);
-  
+
   // ✅ handleSubmit 수정 (입력값 검증 개선)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,6 +202,7 @@ export default function Home() {
           {/* 유저 정보 정리 */}
           {(() => {
             const { userInfo, ...saju } = sajuResult as SajuType;
+            console.log(saju);
             const user = userInfo || {
               name: "알 수 없음",
               birthType: "양력",

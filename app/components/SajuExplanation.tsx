@@ -3,20 +3,41 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import DOMPurify from "dompurify";
 
+interface SajuData {
+  sky: string;
+  ground: string;
+  tenGodSky: string;
+  tenGodGround: string;
+}
+interface SajuResult {
+  year: SajuData;
+  month: SajuData;
+  day: SajuData;
+  hour: SajuData;
+  baseElements: Record<string, number>;
+  adjustedElements: Record<string, number>;
+  daewoonPeriod: number;
+  daewoonList: { age: number; year: number; pillar: string }[];
+  twelveFortunes: Record<string, string>;
+  twelveGods: Record<string, string>;
+  specialGods: Record<string, any>;
+}
+
 interface SajuExplanationProps {
-  sajuResult: any;
+  sajuResult: SajuResult;
   userName: string;
   gender: "남성" | "여성";
 }
 
 export default function SajuExplanation({ sajuResult, userName, gender }: SajuExplanationProps) { 
-    if (!sajuResult) return null;
-  
-    const [isClient, setIsClient] = useState(false);
-  
-    useEffect(() => {
-      setIsClient(true);
-    }, []);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!sajuResult || !isClient) return null;
+
 
 // 사주 오행별 색상 정의
 const elementColors: Record<"목" | "화" | "토" | "금" | "수", string> = {
@@ -90,8 +111,15 @@ const getAnimalAndColor = (dayElement: keyof typeof elementColors, dayGround: st
 // ✅ 최적화된 함수 호출
 const animalData = getAnimalAndColor(dayElement, dayGround);
 
+interface SajuDataType {
+  [key: string]: {
+    [key: string]: {
+      [key: string]: string;
+    };
+  };
+}
 
-  const sajuData: Record<string, any> = {
+const sajuData: SajuDataType = {
     //갑자, 갑인, 갑진, 갑오, 갑신, 갑술
     "갑자일주": {
       "남성": {
@@ -2902,14 +2930,14 @@ return (
     <p className="text-sm text-left text-gray-700">
       <span className="font-bold">{userName}</span>님의 사주를 살펴볼까요? <br />
       태어난 날의 <span className="font-semibold">일간(일주의 천간)</span>은 
-      <span className="font-semibold"> "{daySky}"</span>, <br />
+      <span className="font-semibold"> &quot;{daySky}&quot;</span>, <br />
       <span className="font-semibold">일지(일주의 지지)</span>는 
-      <span className="font-semibold"> "{dayGround}"</span>로 구성되어 있어요.
+      <span className="font-semibold"> &quot;{dayGround}&quot;</span>로 구성되어 있어요.
     </p>
 
     <p className="text-sm text-left text-gray-700 mt-4 break-words">
       즉, <span className="font-bold">{userName}</span>님의 일주는  
-      <span className="text-lg font-bold text-blue-600">"{daySky}{dayGround}"</span>입니다!
+      <span className="text-lg font-bold text-blue-600">&quot;{daySky}{dayGround}&quot;</span>입니다!
     </p>
 
     <hr className="my-4 border-t border-gray-300" />
@@ -2944,8 +2972,8 @@ return (
         <span className="font-bold">{userName}</span>님의 일주 동물은 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>입니다.<br />
         먼저, {userName}님의 일주는 {daySky}{dayGround}일주 였죠?😊<br />
         사주는 다섯 가지 요소(오행: 목, 화, 토, 금, 수)로 구성되어 있어요.<br />
-        오행 중에서 일간인 "{daySky}"는 {dayElement} 속성이 강하며, <br />
-        일지인 "{dayGround}"의 동물과 조합되면 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>이 됩니다.<br /> 
+        오행 중에서 일간인 &quot;{daySky}&quot;는 {dayElement} 속성이 강하며, <br />
+        일지인 &quot;{dayGround}&quot;의 동물과 조합되면 <span className="font-bold">{animalData.animal || "알 수 없음"}</span>이 됩니다.<br /> 
         그렇다면, 나와 같은 일주 동물을 가진 사람들은 어떤 성향을 가지고 있을까요?
       </p>
     </div>
