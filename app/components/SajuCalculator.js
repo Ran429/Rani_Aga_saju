@@ -1,4 +1,5 @@
 // components/SajuCalculator.js
+import { useEffect } from 'react';
 
 const tenKan = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
 const twelveJi = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
@@ -177,6 +178,17 @@ const calculateRelations = (sky, ground) => {
     "사": "신", "오": "미"
   };
 
+  const calculateRelations = (sky, ground) => {
+    const earthlyElementalThreeUnions = {
+      "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
+      "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
+      "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
+      "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
+    };
+    console.log(earthlyElementalThreeUnions);
+  };
+  
+  // useEffect를 컴포넌트 외부에서 사용
   useEffect(() => {
     const earthlyElementalThreeUnions = {
       "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
