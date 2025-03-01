@@ -11,6 +11,22 @@ export interface SajuData {
   tenGodGround: string;
 }
 
+export interface SpecialGods {
+  yeokma?: boolean;
+  dohwa?: boolean;
+  baekho?: boolean;
+  yangin?: boolean;
+  jaesal?: boolean;
+  wolsal?: boolean;
+  mangsin?: boolean;
+  geopsal?: boolean;
+  yukhae?: boolean;
+  wonjin?: boolean;
+  gongmang?: boolean;
+  cheondeok?: boolean;
+  moonchang?: boolean;
+}
+
 export interface SajuResult {
   year: SajuData;
   month: SajuData;
@@ -22,7 +38,12 @@ export interface SajuResult {
   daewoonList: { age: number; year: number; pillar: string }[];
   twelveFortunes: Record<string, string>;
   twelveGods: Record<string, string>;
-  specialGods: Record<string, any>;
+  specialGods: {
+    year: SpecialGods;
+    month: SpecialGods;
+    day: SpecialGods;
+    hour: SpecialGods;
+  }; // ✅ year, month, day, hour 추가!
 }
 
 interface SajuExplanationProps {

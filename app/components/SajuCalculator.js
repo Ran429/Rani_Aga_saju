@@ -183,7 +183,8 @@ const calculateRelations = (sky, ground) => {
     "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
     "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
   };
-
+  console.log(earthlyElementalThreeUnions);
+  
   const earthlyElementalConflicts = {
     "자": "오", "오": "자",
     "축": "미", "미": "축",
