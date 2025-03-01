@@ -177,14 +177,17 @@ const calculateRelations = (sky, ground) => {
     "사": "신", "오": "미"
   };
 
-  const earthlyElementalThreeUnions = {
-    "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
-    "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
-    "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
-    "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
-  };
-  console.log(earthlyElementalThreeUnions);
+  useEffect(() => {
+    const earthlyElementalThreeUnions = {
+      "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
+      "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
+      "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
+      "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
+    };
+    console.log(earthlyElementalThreeUnions);
+  }, []);
   
+
   const earthlyElementalConflicts = {
     "자": "오", "오": "자",
     "축": "미", "미": "축",
