@@ -1,4 +1,5 @@
 // components/SajuCalculator.js
+import { useEffect } from 'react';
 
 const tenKan = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
 const twelveJi = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
@@ -160,8 +161,6 @@ const determineFamilyRelation = (daySky, relation) => {
 
 /// 천간합(天干合)과 지지합(地支合) 계산
 const calculateRelations = (sky, ground) => {
-  console.log(sky, ground);
-
   const heavenlyElementalUnions = {
     "갑": "기", "을": "경", "병": "임", "정": "계",
     "무": "신", "기": "갑", "경": "을", "신": "무",
@@ -172,14 +171,6 @@ const calculateRelations = (sky, ground) => {
     "자": "축", "인": "해", "묘": "술", "진": "유",
     "사": "신", "오": "미"
   };
-
-  const earthlyElementalThreeUnions = {
-    "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
-    "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
-    "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
-    "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
-  };
-  console.log(earthlyElementalThreeUnions);
 
   const earthlyElementalConflicts = {
     "자": "오", "오": "자",
@@ -198,6 +189,18 @@ const calculateRelations = (sky, ground) => {
     occurredConflicts: [] // 발생한 충 저장
   };
 
+  // 클라이언트 전용 코드로 `earthlyElementalThreeUnions` 처리
+  useEffect(() => {
+    const earthlyElementalThreeUnions = {
+      "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
+      "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
+      "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
+      "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
+    };
+
+    console.log(earthlyElementalThreeUnions);
+  }, []);  // `useEffect`는 클라이언트 측에서만 실행되므로 컴포넌트가 마운트될 때만 실행됩니다.
+
   if (relations.heavenlyUnion) {
     relations.occurredUnions.push(`${sky} + ${relations.heavenlyUnion} (천간합)`);
   }
@@ -210,6 +213,7 @@ const calculateRelations = (sky, ground) => {
 
   return relations;
 };
+
 
 /**
  * 🟢 간여지동(干與地同) 판별
