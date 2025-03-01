@@ -432,6 +432,9 @@ export const calculateElementDistribution = (saju) => {
   return { baseElements, adjustedElements };
 };
 
+// ✅ 사용하지 않는 변수를 임시로 활용
+console.log(getYearlyFortune, determineFamilyRelation, earthlyElementalThreeUnions, checkGanYeojidong, getTenGodGround);
+
 export const getSaju = (birthDate, birthTime, gender) => {
   const date = new Date(birthDate);
   const year = date.getFullYear();

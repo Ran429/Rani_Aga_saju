@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getSaju } from "./components/SajuCalculator";
 import SajuExplanation from "./components/SajuExplanation";
+import { SajuResult } from "./components/SajuExplanation";
 
 /**
  * 📌 페이지 구조 개요
@@ -38,6 +39,7 @@ const elementColors: Record<"목" | "화" | "토" | "금" | "수", string> = {
 
 // 🟢 십성 테이블 스타일 정의 (기존 사주표 강조)
 const baseCellStyle = "border border-gray-400 p-2 bg-gray-300 font-bold";
+console.log(baseCellStyle);
 const tenGodCellStyle = "border border-gray-400 p-1 text-sm text-gray-700"; // 십성은 작은 글씨로
 
 // getElement 함수: 한글 문자에 따라 오행 반환
@@ -288,7 +290,7 @@ export default function Home() {
                 </div>
 
                 {/* 사주 풀이 설명을 별도 컴포넌트로 분리 */}
-                <SajuExplanation sajuResult={sajuResult} userName={userName} gender={gender as "남성" | "여성"}/>
+                <SajuExplanation sajuResult={sajuResult as SajuResult} userName={userName} gender={gender as "남성" | "여성"}/>
               </>
             );
           })()}

@@ -3,13 +3,15 @@ import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import DOMPurify from "dompurify";
 
-interface SajuData {
+
+export interface SajuData {
   sky: string;
   ground: string;
   tenGodSky: string;
   tenGodGround: string;
 }
-interface SajuResult {
+
+export interface SajuResult {
   year: SajuData;
   month: SajuData;
   day: SajuData;
@@ -2916,6 +2918,7 @@ const unusedPlaceholder = {
   twelveGods: twelveGods ?? {}, // 십이신살
   specialGods: specialGods ?? {} // 주요 신살
 };
+console.log(unusedPlaceholder);
 
 // 📌 안전한 비율 계산 함수 추가 (0 나누기 방지)
 const safePercentage = (value: number, total: number): string => {
