@@ -1,6 +1,4 @@
 // components/SajuCalculator.js
-import { useEffect } from 'react';
-
 const tenKan = ["갑", "을", "병", "정", "무", "기", "경", "신", "임", "계"];
 const twelveJi = ["자", "축", "인", "묘", "진", "사", "오", "미", "신", "유", "술", "해"];
 const fiveElements = {
@@ -203,15 +201,15 @@ const calculateRelations = (sky, ground) => {
   return relations;
 };
 
-useEffect(() => {
-  const earthlyElementalThreeUnions = {
-    "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
-    "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
-    "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
-    "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
-  };
-  console.log(earthlyElementalThreeUnions);
-}, []); // useEffect로 클라이언트 사이드에서만 실행
+//useEffect(() => {
+//  const earthlyElementalThreeUnions = {
+  //  "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
+  //  "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
+  //  "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
+  //  "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
+ // };
+ // console.log(earthlyElementalThreeUnions);
+// }, []); // useEffect로 클라이언트 사이드에서만 실행
 
 
 /**
@@ -433,7 +431,7 @@ export const calculateElementDistribution = (saju) => {
 };
 
 // ✅ 사용하지 않는 변수를 임시로 활용
-console.log(getYearlyFortune, determineFamilyRelation, earthlyElementalThreeUnions, checkGanYeojidong, getTenGodGround);
+console.log(getYearlyFortune, determineFamilyRelation, checkGanYeojidong, getTenGodGround);
 
 export const getSaju = (birthDate, birthTime, gender) => {
   const date = new Date(birthDate);
