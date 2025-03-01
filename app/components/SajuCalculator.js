@@ -160,6 +160,7 @@ const determineFamilyRelation = (daySky, relation) => {
 };
 
 /// 천간합(天干合)과 지지합(地支合) 계산
+// 계산 함수 (useEffect 제거)
 const calculateRelations = (sky, ground) => {
   const heavenlyElementalUnions = {
     "갑": "기", "을": "경", "병": "임", "정": "계",
@@ -189,18 +190,6 @@ const calculateRelations = (sky, ground) => {
     occurredConflicts: [] // 발생한 충 저장
   };
 
-  // 클라이언트 전용 코드로 `earthlyElementalThreeUnions` 처리
-  useEffect(() => {
-    const earthlyElementalThreeUnions = {
-      "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
-      "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
-      "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
-      "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
-    };
-
-    console.log(earthlyElementalThreeUnions);
-  }, []);  // `useEffect`는 클라이언트 측에서만 실행되므로 컴포넌트가 마운트될 때만 실행됩니다.
-
   if (relations.heavenlyUnion) {
     relations.occurredUnions.push(`${sky} + ${relations.heavenlyUnion} (천간합)`);
   }
@@ -213,6 +202,16 @@ const calculateRelations = (sky, ground) => {
 
   return relations;
 };
+
+useEffect(() => {
+  const earthlyElementalThreeUnions = {
+    "신": ["자", "진"], "자": ["진", "신"], "진": ["신", "자"],
+    "해": ["묘", "미"], "묘": ["미", "해"], "미": ["해", "묘"],
+    "인": ["오", "술"], "오": ["술", "인"], "술": ["인", "오"],
+    "사": ["유", "축"], "유": ["축", "사"], "축": ["사", "유"]
+  };
+  console.log(earthlyElementalThreeUnions);
+}, []); // useEffect로 클라이언트 사이드에서만 실행
 
 
 /**
