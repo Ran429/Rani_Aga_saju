@@ -8,7 +8,8 @@ type SpecialGodsData = {
   hour: SpecialGodsSet;
 };
 
-export default function SpecialGodsSection({ data }: { data: SpecialGodsData }) {
+export default function SpecialGodsSection({ data }: { data?: SpecialGodsData }) {
+    if (!data) return <p>신살 데이터가 없습니다.</p>;
   const pillars = [
     { label: "년주", key: "year" as const },
     { label: "월주", key: "month" as const },
@@ -19,7 +20,7 @@ export default function SpecialGodsSection({ data }: { data: SpecialGodsData }) 
   // boolean -> "있음"인 신살만 추출
   const getActiveGods = (godSet: SpecialGodsSet) =>
     Object.entries(godSet)
-      .filter(([_, value]) => value)
+      .filter(([, value]) => value)
       .map(([key]) => key);
 
   return (

@@ -25,7 +25,7 @@ export function calculateDaewoonPeriod(birthYear: number, birthMonth: number, bi
 
 export const getDaewoonList = (birthYear: number, birthMonth: number, birthDay: number, gender: string) => {
   const startAge = calculateDaewoonPeriod(birthYear, birthMonth, birthDay, gender);
-  let daewoonYears = [];
+  const daewoonYears = [];
   
   for (let i = 0; i < 10; i++) {
     daewoonYears.push({
