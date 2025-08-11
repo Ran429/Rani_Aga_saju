@@ -18,6 +18,45 @@ import {
 } from "@/app/utils/elementUtils";
 
 const tenGodCellStyle = "border border-gray-400 p-1 text-sm text-gray-700";
+export type SpecialGodHit = {
+  name: string;
+  where: "year" | "month" | "day" | "hour" | "all" | string | ("year"|"month"|"day"|"hour")[];
+  basis?: string;
+};
+
+
+// --- Add: SpecialGodsSection에 맞게 변환하는 헬퍼 ---
+type WhereKey = "year" | "month" | "day" | "hour";
+type SpecialGodHitLite = { name: string; where: WhereKey | "all" | string | WhereKey[] };
+type SpecialGodsData = { year: string[]; month: string[]; day: string[]; hour: string[] };
+
+const ALL_KEYS: WhereKey[] = ["year", "month", "day", "hour"];
+
+function toSpecialGodsData(sg: unknown): SpecialGodsData {
+  const out: SpecialGodsData = { year: [], month: [], day: [], hour: [] };
+  if (!Array.isArray(sg)) return out; // sg가 없거나 배열이 아니면 빈값
+
+  sg.forEach((h: SpecialGodHitLite) => {
+    const w = h?.where;
+    const targets: WhereKey[] = Array.isArray(w)
+      ? (w as WhereKey[])
+      : w === "all"
+      ? ALL_KEYS
+      : ALL_KEYS.includes(w as WhereKey)
+      ? [w as WhereKey]
+      : []; // 알 수 없는 값이면 무시
+
+    targets.forEach((k) => out[k].push(h.name));
+  });
+
+  // 중복 제거
+  (Object.keys(out) as (keyof SpecialGodsData)[]).forEach((k) => {
+    out[k] = Array.from(new Set(out[k]));
+  });
+
+  return out;
+}
+
 
 export default function Home() {
   const [userName, setUserName] = useState("");
@@ -194,7 +233,7 @@ export default function Home() {
                   분석해 드릴게요.
                 </p>
                 <p className="text-center font-bold mt-2">
-                  {user.birthType} {user.birthDate} {ageText}, {user.gender}
+                  {user.birthType} / {user.birthDate} / {ageText}, {user.gender}
                 </p>
 
                 <h3 className="text-xl font-bold text-blue-400 mt-6 text-left">
@@ -333,7 +372,12 @@ export default function Home() {
                     sanitizedExplanation=""
                   />
                   <TenGodInterpretation data={sajuResult.baseTenGods} />
-                  <SpecialGodsSection data={sajuResult.specialGods} />
+                  <SpecialGodsSection
+                    data={toSpecialGodsData([
+                      ...(sajuResult.specialGods ?? []),
+                      ...(sajuResult.goodGods ?? []),
+                    ])}
+                  />
                 </div>
               </>
             );
