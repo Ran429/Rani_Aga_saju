@@ -1,4 +1,3 @@
-//C:\Users\zeroj\saju\Rani_Aga_saju\app\calculators\sajuCalculator.ts
 import {
   calculateYearPillar,
   calculateMonthPillar,
@@ -9,13 +8,15 @@ import {
 import { getTenGod, GanKey, JiKey, getHiddenStems } from "../utils/elementUtils";
 import { calculateElementDistribution } from "./elementDistribution";
 import { calculateDaewoonPeriod, getDaewoonList } from "../utils/daewoonUtils";
-
 import { calculateTwelveFortunes } from "../utils/fortuneUtils";
 import { checkSpecialGodsAll } from "../utils/specialGodsUtils";
 import { checkGoodGodsAll } from "../utils/goodGodsUtils";
 
 import { FourPillars } from "../types/sajuTypes";
 
+// 점수 관련 추가
+import { buildScoreInput } from "./scoreInputBuilder";
+import { calculate_score_with_limits } from "./scoreCalculator";
 
 type TenGodType =
   | "알 수 없음"
@@ -49,7 +50,8 @@ const initTenGods = (): TenGodCount => ({
 export const getSaju = (
   birthDate: string,
   birthTime: string,
-  gender: string
+  gender: string,
+  name: string
 ) => {
   const date = new Date(birthDate);
   const year = date.getFullYear();
@@ -91,30 +93,30 @@ export const getSaju = (
     },
   };
 
-const {
-  baseElements,         // 조후+궁성 반영(네 설계상 ‘현재’로 쓸 값)
-  adjustedElements,     // 합(+충) 반영 후
-  occurredUnions,
-  occurredConflicts,
-  adjustedPillars,      // 합 반영된 기둥 (십성 재계산에 사용)
-} = calculateElementDistribution(saju, { stages: true });
+  const {
+    baseElements,
+    adjustedElements,
+    occurredUnions,
+    occurredConflicts,
+    adjustedPillars,
+  } = calculateElementDistribution(saju, { stages: true });
 
   const baseTenGods = initTenGods();
   const adjustedTenGods = initTenGods();
 
-// base
-[saju.year, saju.month, saju.day, saju.hour].forEach((p) => {
-  baseTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1; // 천간 4
-  const main = getHiddenStems(p.ground)[0];                        // 지지 '본기'만
-  if (main) baseTenGods[getTenGod(dayPillar.sky, main) as TenGodType] += 1; // 지지 4
-});
+  // base
+  [saju.year, saju.month, saju.day, saju.hour].forEach((p) => {
+    baseTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1;
+    const main = getHiddenStems(p.ground)[0];
+    if (main) baseTenGods[getTenGod(dayPillar.sky, main) as TenGodType] += 1;
+  });
 
-// adjusted
-adjustedPillars.forEach((p: { sky: GanKey; ground: JiKey }) => {
-  adjustedTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1;
-  const main = getHiddenStems(p.ground)[0];
-  if (main) adjustedTenGods[getTenGod(dayPillar.sky, main) as TenGodType] += 1;
-});
+  // adjusted
+  adjustedPillars.forEach((p: { sky: GanKey; ground: JiKey }) => {
+    adjustedTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1;
+    const main = getHiddenStems(p.ground)[0];
+    if (main) adjustedTenGods[getTenGod(dayPillar.sky, main) as TenGodType] += 1;
+  });
 
   const daewoonPeriod = calculateDaewoonPeriod(year, month, day, gender);
   const daewoonList = getDaewoonList(year, month, day, gender);
@@ -126,7 +128,6 @@ adjustedPillars.forEach((p: { sky: GanKey; ground: JiKey }) => {
     hour: calculateTwelveFortunes(dayPillar.sky, hourPillar.ground),
   };
 
-  // FourPillars 객체
   const pillars: FourPillars = {
     year: yearPillar,
     month: monthPillar,
@@ -134,13 +135,33 @@ adjustedPillars.forEach((p: { sky: GanKey; ground: JiKey }) => {
     hour: hourPillar,
   };
 
-const specialGods = checkSpecialGodsAll(pillars, {
-  baekhoMode: "dayOnly",   // 백호: 일주만
-  dohwaMode:  "four",      // 도화: 자·오·묘·유
-  yeokmaMode: "strict",    // 역마: 인/신/사/해 + 이전계절 삼합 동반
-  pairWonjin: false,       // 쌍관계 원진 OFF
-});
-  const goodGods = checkGoodGodsAll(pillars);       // 길성
+  const specialGods = checkSpecialGodsAll(pillars, {
+    baekhoMode: "dayOnly",
+    dohwaMode: "four",
+    yeokmaMode: "strict",
+    pairWonjin: false,
+  });
+
+  const goodGods = checkGoodGodsAll(pillars);
+
+  const scoreInput = buildScoreInput({
+    year: saju.year,
+    month: saju.month,
+    day: saju.day,
+    hour: saju.hour,
+    baseElements,
+    adjustedElements,
+    baseTenGods,
+    adjustedTenGods,
+    occurredUnions,
+    occurredConflicts,
+    specialGods,
+    goodGods,
+    twelveFortunes,
+    daewoonList,
+    daewoonPeriod
+  }, name);
+  const scoreResult = calculate_score_with_limits(scoreInput);
 
   return {
     ...saju,
@@ -155,5 +176,6 @@ const specialGods = checkSpecialGodsAll(pillars, {
     twelveFortunes,
     specialGods,
     goodGods,
+    score: scoreResult // ← 점수도 같이 반환
   };
 };

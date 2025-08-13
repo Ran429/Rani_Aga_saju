@@ -25,7 +25,7 @@ interface Pillar { sky: GanKey; ground: JiKey; }
 const GROUND_W: Record<Pos, number> = { month: 1.0, day: 0.8, hour: 0.6, year: 0.6 };
 const SKY_FACTOR = 0.7;
 
-const BRANCH_TO_SEASON: Record<JiKey, Season> = {
+export const BRANCH_TO_SEASON: Record<JiKey, Season> = {
   인:"spring", 묘:"spring", 진:"spring",
   사:"summer", 오:"summer",
   미:"lateSummer",

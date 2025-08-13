@@ -1,5 +1,6 @@
 // app/components/SajuExplanation/BasicStructure.tsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
+
 import Image from "next/image";
 import { getElement, GanKey, JiKey } from "@/app/utils/elementUtils";
 import { calculateElementDistribution } from "@/app/calculators/elementDistribution";
@@ -8,6 +9,9 @@ import { getDaewoonList } from "@/app/utils/daewoonUtils";
 import type { BasicStructureProps } from "@/app/types/sajuTypes"; // 이미 있다면 유지
 import { splitBirthDate, normalizeGender, type Gender } from "@/app/types/sajuTypes";
 import { sajuData } from "./data";
+
+import { buildScoreInput } from "@/app/calculators/scoreInputBuilder";
+import { calculate_score_with_limits as calculateScore } from "@/app/calculators/scoreCalculator";
 
 /** 내부 전용 타입 */
 type ElementType = "목" | "화" | "토" | "금" | "수";
@@ -174,6 +178,43 @@ function DonutChart({
   );
 }
 
+function ScoreBadge({ score, userName }: { score: number; userName: string }) {
+  const [displayScore, setDisplayScore] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const duration = 1200;
+    const stepTime = 16;
+    const step = Math.ceil(score / (duration / stepTime));
+
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= score) {
+        start = score;
+        clearInterval(timer);
+      }
+      setDisplayScore(start);
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [score]);
+
+  return (
+    <div className="my-8 flex flex-col items-center">
+      <h2 className="text-xl font-bold text-gray-800 mb-3">
+        어디 보자... {userName}님의 사주는 몇 점일까?
+      </h2>
+      <div className="relative w-28 h-28 rounded-full flex flex-col items-center justify-center shadow-lg bg-gradient-to-br from-rose-400 to-pink-500 animate-pulse">
+        <div className="flex items-baseline">
+          <span className="text-white text-4xl font-extrabold">{displayScore}</span>
+          <span className="ml-1 text-lg text-white opacity-80">점</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 /** 색상 맵 (ElementType으로 타입 안전) */
 const elementColors: Record<ElementType, string> = {
   목: "bg-white border-green-400",
@@ -245,6 +286,7 @@ const getAnimalAndColor = (
 
   return { animal: `${colorPrefix[dayElement]}${animal}`, imageUrl };
 };
+
 
 export default function BasicStructure({
   userName,
@@ -346,10 +388,18 @@ const yangStems: GanKey[] = ["갑","병","무","경","임"];
 const isYangYearStem = yangStems.includes(sajuResult.year.sky as GanKey);
 const isMale  = gender === "남성";
 const forwardTxt = (isYangYearStem && isMale) || (!isYangYearStem && !isMale) ? "순행" : "역행";
+const scoreInput = buildScoreInput(sajuResult, "테스트");
+const scoreResult = calculateScore(scoreInput);
 
 
   return (
     <section>
+      <hr className="my-4 border-t border-gray-300" />
+
+       {/* 📌 점수 표시 영역 */}
+      <ScoreBadge score={scoreResult.total} userName={userName} />
+
+      <hr className="my-4 border-t border-gray-300" />
       {/* 📌 1. 사주의 기본 구성 */}
       <h2 className="text-lg font-bold mb-3">📌 1. 사주의 기본 구성</h2>
       <p className="mb-4 text-sm text-gray-700 leading-relaxed">

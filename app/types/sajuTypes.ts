@@ -102,6 +102,8 @@ export interface SajuResultType {
   month: { sky: string; ground: string; tenGodSky: string; tenGodGround: string };
   day: { sky: string; ground: string; tenGodSky: string; tenGodGround: string };
   hour: { sky: string; ground: string; tenGodSky: string; tenGodGround: string };
+  occurredUnions: string[];    // 합 발생 리스트
+  occurredConflicts: string[]; // 충 발생 리스트
   userInfo?: {
     name: string;
     birthType: string;

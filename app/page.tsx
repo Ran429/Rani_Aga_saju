@@ -105,7 +105,7 @@ const raw = e.target.value;
       return;
     }
 
-    const result = getSaju(birthDate, birthTime, gender);
+const result = getSaju(birthDate, birthTime, gender, userName);
     setSajuResult({
       ...result,
       userInfo: { name: userName, birthType, birthDate, birthTime, gender },
