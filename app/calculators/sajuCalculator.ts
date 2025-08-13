@@ -1,3 +1,4 @@
+//C:\Users\zeroj\saju\Rani_Aga_saju\app\calculators\sajuCalculator.ts
 import {
   calculateYearPillar,
   calculateMonthPillar,
@@ -56,7 +57,7 @@ export const getSaju = (
   const day = date.getDate();
 
   const yearPillar: { sky: GanKey; ground: JiKey } = calculateYearPillar(year, month, day);
-  const monthPillar: { sky: GanKey; ground: JiKey } = calculateMonthPillar(year, month);
+  const monthPillar = calculateMonthPillar(year, month, day);
   const dayPillar: { sky: GanKey; ground: JiKey } = calculateDayPillar(year, month, day);
   const hourPillar: { sky: GanKey; ground: JiKey } = calculateHourPillar(dayPillar.sky, birthTime);
 
@@ -90,30 +91,30 @@ export const getSaju = (
     },
   };
 
-  const {
-    baseElements,
-    adjustedElements,
-    occurredUnions,
-    occurredConflicts,
-    adjustedPillars,
-  } = calculateElementDistribution(saju);
+const {
+  baseElements,         // 조후+궁성 반영(네 설계상 ‘현재’로 쓸 값)
+  adjustedElements,     // 합(+충) 반영 후
+  occurredUnions,
+  occurredConflicts,
+  adjustedPillars,      // 합 반영된 기둥 (십성 재계산에 사용)
+} = calculateElementDistribution(saju, { stages: true });
 
   const baseTenGods = initTenGods();
   const adjustedTenGods = initTenGods();
 
-  [saju.year, saju.month, saju.day, saju.hour].forEach((p) => {
-    baseTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1;
-    getHiddenStems(p.ground).forEach(stem => {
-      baseTenGods[getTenGod(dayPillar.sky, stem) as TenGodType] += 1;
-    });
-  });
+// base
+[saju.year, saju.month, saju.day, saju.hour].forEach((p) => {
+  baseTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1; // 천간 4
+  const main = getHiddenStems(p.ground)[0];                        // 지지 '본기'만
+  if (main) baseTenGods[getTenGod(dayPillar.sky, main) as TenGodType] += 1; // 지지 4
+});
 
-  adjustedPillars.forEach((p: { sky: GanKey; ground: JiKey }) => {
-    adjustedTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1;
-    getHiddenStems(p.ground).forEach(stem => {
-      adjustedTenGods[getTenGod(dayPillar.sky, stem) as TenGodType] += 1;
-    });
-  });
+// adjusted
+adjustedPillars.forEach((p: { sky: GanKey; ground: JiKey }) => {
+  adjustedTenGods[getTenGod(dayPillar.sky, p.sky) as TenGodType] += 1;
+  const main = getHiddenStems(p.ground)[0];
+  if (main) adjustedTenGods[getTenGod(dayPillar.sky, main) as TenGodType] += 1;
+});
 
   const daewoonPeriod = calculateDaewoonPeriod(year, month, day, gender);
   const daewoonList = getDaewoonList(year, month, day, gender);
@@ -125,7 +126,6 @@ export const getSaju = (
     hour: calculateTwelveFortunes(dayPillar.sky, hourPillar.ground),
   };
 
-
   // FourPillars 객체
   const pillars: FourPillars = {
     year: yearPillar,
@@ -134,7 +134,12 @@ export const getSaju = (
     hour: hourPillar,
   };
 
-  const specialGods = checkSpecialGodsAll(pillars); // 신살
+const specialGods = checkSpecialGodsAll(pillars, {
+  baekhoMode: "dayOnly",   // 백호: 일주만
+  dohwaMode:  "four",      // 도화: 자·오·묘·유
+  yeokmaMode: "strict",    // 역마: 인/신/사/해 + 이전계절 삼합 동반
+  pairWonjin: false,       // 쌍관계 원진 OFF
+});
   const goodGods = checkGoodGodsAll(pillars);       // 길성
 
   return {

@@ -1,9 +1,10 @@
 // app/components/SajuExplanation/BasicStructure.tsx
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
+import { getElement, GanKey, JiKey } from "@/app/utils/elementUtils";
+import { calculateElementDistribution } from "@/app/calculators/elementDistribution";
 
-import { getElement, GanKey } from "@/app/utils/elementUtils";
-import { getYearGanji, getDaewoonTimeline } from "@/app/utils/dateUtils";
+import { getDaewoonList } from "@/app/utils/daewoonUtils";
 import type { BasicStructureProps } from "@/app/types/sajuTypes"; // 이미 있다면 유지
 import { splitBirthDate, normalizeGender, type Gender } from "@/app/types/sajuTypes";
 import { sajuData } from "./data";
@@ -23,17 +24,27 @@ const DONUT_COLORS: Record<ElementType, { stroke: string; bg: string }> = {
   수: { stroke: "text-sky-500", bg: "bg-sky-500" },
 };
 
+const PILL_STYLES: Record<ElementType, string> = {
+  목: "bg-emerald-50 text-emerald-700 border border-emerald-300",
+  화: "bg-rose-50 text-rose-700 border border-rose-300",
+  토: "bg-amber-50 text-amber-800 border border-amber-300",
+  금: "bg-slate-50 text-slate-700 border border-slate-300",
+  수: "bg-sky-50 text-sky-700 border border-sky-300",
+};
+
 /** 도넛 차트 (순수 SVG) */
 function DonutChart({
   data,
   title,
-  size = 140,
+  size = 115,
   strokeWidth = 18,
+  titleClassName,
 }: {
   data: Record<ElementType, number>;
   title: string;
   size?: number;
   strokeWidth?: number;
+  titleClassName?: string;
 }) {
   const values = ELEMENT_ORDER.map((el) => data[el] ?? 0);
   const total = values.reduce((a, b) => a + b, 0);
@@ -49,7 +60,7 @@ function DonutChart({
   const c = 2 * Math.PI * r;
   const startAngle = -Math.PI / 2;
   const minPctToLabel = 6;
-  const labelRadius = r + strokeWidth / 2 + 10;
+  const labelRadius = r + strokeWidth / 2 + 8;
 
   let accRatio = 0;
   const segments = ELEMENT_ORDER.map((el) => {
@@ -110,7 +121,7 @@ function DonutChart({
           y="50%"
           textAnchor="middle"
           dominantBaseline="central"
-          className={`text-sm font-semibold ${DONUT_COLORS[top.el].stroke}`}
+          className={`text-xl font-semibold ${DONUT_COLORS[top.el].stroke}`}
           fill="currentColor"
         >
           {total > 0 ? top.el : "—"}
@@ -149,8 +160,15 @@ function DonutChart({
         })}
       </svg>
 
+      {/* title label */}
       {title && (
-        <div className="mt-2 text-[12px] font-medium text-slate-700">{title}</div>
+        <div
+          className={`text-[12px] font-medium text-slate-700 ${
+            titleClassName ?? "mt-2"
+          }`}
+        >
+          {title}
+        </div>
       )}
     </div>
   );
@@ -240,27 +258,32 @@ export default function BasicStructure({
 
   const animalData = getAnimalAndColor(dayElement, dayGround);
 
-  // 최다/최소 원소
-  const dominantElement = Object.keys(sajuResult.adjustedElements).reduce((a, b) =>
-    (sajuResult.adjustedElements as Record<string, number>)[a] >
-    (sajuResult.adjustedElements as Record<string, number>)[b]
-      ? a
-      : b
-  );
-  const minCount = Math.min(...Object.values(sajuResult.adjustedElements));
-  const weakElements = Object.keys(sajuResult.adjustedElements).filter(
-    (k) => (sajuResult.adjustedElements as Record<string, number>)[k] === minCount
-  );
 
   // ✅ birthDate 문자열 → 연/월/일 안전 파싱 (birthYear/Month/Day가 없을 때 대비)
   const { year: birthYear, month: birthMonth, day: birthDay } = splitBirthDate(sajuResult.userInfo);
   const gender: Gender = normalizeGender(sajuResult.userInfo?.gender);
 
+  // ✅ 옵션 토글 (조후 / 궁성가중 / 합·충)
+ const [applyChohu, setApplyChohu] = useState(true);
+ const [applyPalace, setApplyPalace] = useState(true);
+ const [applyUnions, setApplyUnions] = useState(true);
+
   // ✅ 대운 리스트 (항상 훅은 리턴보다 먼저)
   const myDaewoon = useMemo(() => {
-    if (!birthYear || !birthMonth || !birthDay) return [];
-    return getDaewoonTimeline(birthYear, birthMonth, birthDay, gender);
-  }, [birthYear, birthMonth, birthDay, gender]);
+  if (!birthYear || !birthMonth || !birthDay) return [];
+  return getDaewoonList(birthYear, birthMonth, birthDay, gender);
+}, [birthYear, birthMonth, birthDay, gender]);
+
+// 오늘 기준 만 나이 계산
+function getCurrentAge(y: number, m: number, d: number) {
+  const today = new Date();
+  let age = today.getFullYear() - y;
+  const hasNotHadBirthday =
+    today.getMonth() + 1 < m ||
+    (today.getMonth() + 1 === m && today.getDate() < d);
+  if (hasNotHadBirthday) age -= 1;
+  return age;
+}
 
   // 2) 그 다음 렌더 분기
   const isDataReady =
@@ -270,6 +293,60 @@ export default function BasicStructure({
     console.warn("❗ sajuResult 데이터가 준비되지 않았습니다:", sajuResult);
     return <p className="text-sm text-gray-500">사주 데이터 로딩 중...</p>;
   }
+
+ // ✅ pillars 한번에
+ const pillars = {
+   year:  { sky: sajuResult.year.sky  as GanKey, ground: sajuResult.year.ground  as JiKey },
+   month: { sky: sajuResult.month.sky as GanKey, ground: sajuResult.month.ground as JiKey },
+   day:   { sky: sajuResult.day.sky   as GanKey, ground: sajuResult.day.ground   as JiKey },
+   hour:  { sky: sajuResult.hour.sky  as GanKey, ground: sajuResult.hour.ground  as JiKey },
+ };
+
+ // ✅ 단계별 결과 받기 (stages: true)
+ const {
+   rawElements,              // 원본(무보정)
+   chohuPalaceElements,      // 조후+궁성 반영
+   baseElements,             // ↑와 동일(호환 키)
+   adjustedElements,         // 합·충 반영 후
+ } = calculateElementDistribution(pillars, {
+   applyChohu, applyPalace, applyUnions, stages: true,
+ });
+
+const rawForChart = (rawElements ?? baseElements) as Record<ElementType, number>;
+const chohuForChart = (chohuPalaceElements ?? baseElements) as Record<ElementType, number>;
+
+function summarizeElements(data: Record<ElementType, number>) {
+  const vals = Object.values(data);
+  const max = Math.max(...vals);
+  const min = Math.min(...vals);
+  const keys = Object.keys(data) as ElementType[];
+  const dominants = keys.filter(k => data[k] === max);
+  const weaks     = keys.filter(k => data[k] === min);
+  return { dominants, weaks };
+}
+
+function formatWithPct(
+  data: Record<ElementType, number>,
+  keys: ElementType[]
+) {
+  const total = Object.values(data).reduce((a,b)=>a+b, 0) || 1;
+  return keys.map(k => `${k} ${Math.round((data[k] / total) * 100)}%`).join(", ");
+}
+
+// 🔎 세 단계 요약
+const { dominants: domRaw,   weaks: weakRaw }   = summarizeElements(rawForChart);
+const { dominants: domCP,    weaks: weakCP }    = summarizeElements(chohuForChart); // CP = Chohu+Palace
+const { dominants: domAdj,   weaks: weakAdj }   = summarizeElements(adjustedElements);
+
+// 대운 안내용 메타
+const startAge = myDaewoon[0]?.age ?? sajuResult.daewoonPeriod;
+
+// 순/역행 텍스트 (연간 음양 + 성별)
+const yangStems: GanKey[] = ["갑","병","무","경","임"];
+const isYangYearStem = yangStems.includes(sajuResult.year.sky as GanKey);
+const isMale  = gender === "남성";
+const forwardTxt = (isYangYearStem && isMale) || (!isYangYearStem && !isMale) ? "순행" : "역행";
+
 
   return (
     <section>
@@ -366,82 +443,110 @@ export default function BasicStructure({
 
       {/* 📌 1-3. 현재 사주의 오행 분포 (도넛) */}
       <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-3. 현재 사주의 오행 분포</h3>
+{/* 옵션 토글 */}
+<div className="mt-2 flex flex-wrap items-center gap-4 text-[12px] text-slate-700">
+  <label className="inline-flex items-center gap-1">
+    <input type="checkbox" checked={applyChohu} onChange={e=>setApplyChohu(e.target.checked)} />
+    조후
+  </label>
+  <label className="inline-flex items-center gap-1">
+    <input type="checkbox" checked={applyPalace} onChange={e=>setApplyPalace(e.target.checked)} />
+    궁성 가중
+  </label>
+  <label className="inline-flex items-center gap-1">
+    <input type="checkbox" checked={applyUnions} onChange={e=>setApplyUnions(e.target.checked)} />
+    합·충
+  </label>
+</div>
 
-      {/* 도넛 2개 + 가운데 큰 화살표 */}
-      <div className="mt-2 grid grid-cols-1 items-center gap-6 sm:grid-cols-[1fr_auto_1fr]">
-        {/* 현재(왼쪽) */}
-        <DonutChart
-          title="현재"
-          data={sajuResult.adjustedElements as Record<ElementType, number>}
-        />
+{/* 도넛 3개 + 화살표 2개 */}
+<div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
+  <DonutChart title="원 사주" data={rawForChart} titleClassName="mt-6" />
+  <div className="hidden sm:flex items-center justify-center px-1">
+    <svg viewBox="0 0 24 24" className="h-8 w-8 sm:h-10 sm:w-10 text-slate-300">
+      <path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  </div>
 
-        {/* 가운데 큰 화살표 */}
-        <div className="flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className="h-12 w-12 text-slate-400" aria-hidden="true">
-            <path
-              d="M5 12h14m-6-6 6 6-6 6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
+  <DonutChart title="조후+궁성 보정 후" data={chohuForChart} titleClassName="mt-6" />
+  <div className="hidden sm:flex items-center justify-center px-1">
+    <svg viewBox="0 0 24 24" className="h-8 w-8 sm:h-10 sm:w-10 text-slate-300">
+      <path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  </div>
 
-        {/* 보정 후(오른쪽) */}
-        <DonutChart
-          title="보정 후"
-          data={sajuResult.baseElements as Record<ElementType, number>}
-        />
-      </div>
+  <DonutChart title="합·충 보정 후" data={adjustedElements} titleClassName="mt-6" />
+</div>
 
-      <p className="mt-3 text-[12px] text-slate-600">
-        현재 사주에서는{" "}
-        <span className="font-semibold text-slate-800">{dominantElement}</span> 기운이 강하며,
-        <span className="font-semibold text-slate-800"> {weakElements.join(", ")}</span> 기운이
-        부족합니다.
-      </p>
 
+{/* 단계별 강/약 요약 */}
+<div className="mt-3 grid gap-2 text-[12px] text-slate-600 md:grid-cols-3">
+  <p>
+    <b className="text-slate-800">현재 사주</b>에서는{" "}
+    <span className="font-semibold text-slate-800">{formatWithPct(rawForChart, domRaw)}</span> 기운이 강하며,
+    <span className="font-semibold text-slate-800"> {formatWithPct(rawForChart, weakRaw)}</span> 기운이 부족합니다.
+  </p>
+  <p>
+    <b className="text-slate-800">조후+궁성 보정 후</b>에서는{" "}
+    <span className="font-semibold text-slate-800">{formatWithPct(chohuForChart, domCP)}</span> 기운이 강하며,
+    <span className="font-semibold text-slate-800"> {formatWithPct(chohuForChart, weakCP)}</span> 기운이 부족합니다.
+  </p>
+  <p>
+    <b className="text-slate-800">합·충 적용 후</b>에는{" "}
+    <span className="font-semibold text-slate-800">{formatWithPct(adjustedElements, domAdj)}</span> 기운이 강하며,
+    <span className="font-semibold text-slate-800"> {formatWithPct(adjustedElements, weakAdj)}</span> 기운이 부족합니다.
+  </p>
+</div>
       <hr className="my-4 border-t border-gray-300" />
 
       {/* 📌 1-4. 대운 */}
       <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-4. 나의 대운</h3>
       <p className="text-sm text-left text-gray-700">
-        대운은 10년 주기로 변화하는 운세입니다. {userName}님의 경우,{" "}
-        {sajuResult.daewoonPeriod}세부터 시작됩니다.
-      </p>
+  대운은 10년 주기로 변화하는 운세입니다.&nbsp;
+  {myDaewoon.length ? (
+    <>
+      {userName}님은 <b>{startAge}세</b>부터 시작(
+      <span className="text-slate-500">{forwardTxt}</span>)합니다.
+    </>
+  ) : (
+    `${userName}님의 대운 시작 정보를 계산하지 못했습니다.`
+  )}
+</p>
 
-      {myDaewoon.length === 0 ? (
-        <p className="mt-2 text-[12px] text-slate-500">대운 정보를 불러오지 못했습니다.</p>
-      ) : (
-        <ul className="mt-3 divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white/60">
-          {myDaewoon.map((item) => {
-            const yg = getYearGanji(item.year); // { ganji, zodiac }
-            return (
-              <li key={item.age} className="flex items-center gap-3 px-3 py-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-500" />
-                <div className="flex flex-wrap items-center gap-x-2 text-sm">
-                  <span className="font-semibold text-slate-800">{item.age}세</span>
-                  <span className="text-slate-400">({item.year}년)</span>
 
-                  <span className="text-slate-300">·</span>
-                  <span className="text-slate-600">
-                    연간지 <b className="text-slate-800">{yg.ganji}</b>
-                    <span className="ml-1 text-slate-500">/ {yg.zodiac}띠</span>
-                  </span>
+{/* 그리드 카드형 대운 */}
+<div className="mt-3 flex flex-wrap justify-center gap-1.5">
+  {myDaewoon.map((item) => {
+   // ✅ daewoonUtils.getDaewoonList가 돌려준 대운 간지 사용
+   const gan = (item.pillarGan ?? item.pillar?.[0]) as GanKey;
+   const ji  = (item.pillarJi  ?? item.pillar?.[1]) as JiKey;
+   const elGan = getElement(gan) as ElementType;
+   const elJi  = getElement(ji)  as ElementType;
 
-                  <span className="mx-2 text-slate-300">→</span>
+    const currAge = getCurrentAge(birthYear!, birthMonth!, birthDay!);
+    const isActive = currAge >= item.age && currAge < item.age + 10;
 
-                  <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[12px] font-semibold text-indigo-600">
-                    대운 {item.pillar}
-                  </span>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+    return (
+      <div
+        key={item.age}
+        className={[
+          "w-[72px] sm:w-[52px] rounded-lg  bg-white/70 p-1.5 border shadow-sm",
+          "leading-tight", // 세로 밀도 ↑
+          isActive ? "ring-2 ring-rose-500 border-transparent" : "border-slate-200",
+        ].join(" ")}
+      >
+        <div className="text-center text-[13px] font-semibold text-slate-900">{item.age}세</div>
+        <div className="text-center text-[12px] text-slate-500">{item.year}년</div>
+
+        {/* 임 / 오 → 세로 배치 */}
+        <div className="mt-1 flex flex-col gap-1">
+          <span className={`text-center px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elGan]}`}>{gan}</span>
+          <span className={`text-center px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elJi]}`}>{ji}</span>
+        </div>
+      </div>
+    );
+  })}
+</div>
 
       <hr className="my-4 border-t border-gray-300" />
 

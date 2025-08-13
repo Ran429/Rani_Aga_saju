@@ -1,4 +1,4 @@
-// utils/dateUtils.ts
+// C:\Users\zeroj\saju\Rani_Aga_saju\app\utils\dateUtils.ts
 import { tenKan, twelveJi } from "../constants/elements";
 import { solarTerms } from "../constants/solarTerms";
 
@@ -53,19 +53,35 @@ export const calculateYearPillar = (
 export const calculateMonthPillar = (
   year: number,
   month: number,
-  day?: number
+  day: number =15
 ): Pillar => {
-  const beforeIpchun = month === 2 && day !== undefined && day < 4;
-  const adjustedYear = month < 2 || beforeIpchun ? year - 1 : year;
+  const beforeIpchun = month === 2 && day < 4;
+  const solarYear = month < 2 || beforeIpchun ? year - 1 : year;
+    // 2) 대상 날짜 (보정된 '절기년' 안의 실제 날짜)
+  const target = new Date(year, month - 1, day);
 
-  // 연간지
-  const yearSky = asGan(adjustedYear + 6);
+    // 3) 해당 절기년의 12절기 시작일(월지 경계) 생성
+  //    - solarTerms는 각 월의 시작 절기(입춘, 경칩, 청명, ..., 소한)를 12개 담고 있다고 가정
+  //    - 1월 항목은 다음 해로 넘어가므로 solarYear+1로 생성 (getDaewoonStartAge와 동일 규칙)
+  const monthStarts = (solarTerms as { month: number; day: number; name?: string }[]).map(t => {
+    const y = t.month === 1 ? solarYear + 1 : solarYear;
+    return new Date(y, t.month - 1, t.day);
+  });
 
-  // 寅월 기준 지지 인덱스(지지: 寅=2월부터)
-  const monthGroundIdx = (month + 10) % 12; // 2→0(寅), 3→1(卯) ... 1→11(丑)
-  const ground = asJi(monthGroundIdx);
+  // 4) 타깃 날짜가 속한 "마지막 경계" 찾기 (해당 절기년에서)
+  //    입춘(2월)부터 순서대로 0..11 => 0=寅, 1=卯, ..., 11=丑
+  let idx = 0;
+  for (let i = 0; i < monthStarts.length; i++) {
+    if (monthStarts[i].getTime() <= target.getTime()) idx = i;
+    else break;
+  }
 
-  // 寅월의 천간 시작 인덱스(above rule)
+  // 5) 지지(월지) & 천간(월간)
+  const IN_OFFSET = twelveJi.indexOf("인"); // 보통 2
+  const ground = asJi(IN_OFFSET + idx);
+
+  // 연간의 천간으로 寅월의 시작 천간 결정
+  const yearSky = asGan(solarYear + 6);
   const startStemIndexByYearStem: Record<GanKey, number> = {
     갑: 2, 기: 2,  // 丙
     을: 4, 경: 4,  // 戊
@@ -73,11 +89,11 @@ export const calculateMonthPillar = (
     정: 8, 임: 8,  // 壬
     무: 0, 계: 0,  // 甲
   };
-  const startIdx = startStemIndexByYearStem[yearSky];
-  const sky = asGan(startIdx + monthGroundIdx); // 寅월을 0으로 둔 상대 오프셋
+  const sky = asGan(startStemIndexByYearStem[yearSky] + idx); // 寅월을 0으로 두고 +idx
 
   return { sky, ground };
 };
+
 
 /** ─────────────────────────────
  *  일주(일간지)

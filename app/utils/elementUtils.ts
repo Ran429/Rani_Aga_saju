@@ -7,6 +7,8 @@ export type FiveElementType = typeof fiveElements[GanKey];
 export type YinYangKey = keyof typeof yinYang;
 export type RelKey = keyof typeof rel;
 
+type ElementType = "목" | "화" | "토" | "금" | "수";
+
 // ✅ 오행 색상 매핑 (UI 전용)
 export const elementColors: Record<FiveElementType, string> = {
   목: "text-green-600",
@@ -105,3 +107,18 @@ export const getTenGodDetail = (daySky: GanKey, target: GanKey) => {
 
   return { name, group: groupMap[name] || "알 수 없음" };
 };
+
+export function baseElements(
+  pillars: { sky: GanKey; ground: JiKey }[]
+): Record<ElementType, number> {
+  const baseElements: Record<ElementType, number> = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
+
+  pillars.forEach(({ sky, ground }) => {
+    const skyEl = fiveElements[sky as GanKey];
+    const groundEl = fiveElements[ground as JiKey];
+    if (skyEl) baseElements[skyEl as ElementType] += 1;
+    if (groundEl) baseElements[groundEl as ElementType] += 1;
+  });
+
+  return baseElements;
+}
