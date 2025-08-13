@@ -39,11 +39,3 @@ export const calculateTwelveFortunes = (
 
   return twelveFortunesOrder[distance];
 };
-
-export const calculateTwelveGods = (
-  yearGround: JiKey,
-  targetGround: JiKey
-): TwelveGodName | "없음" => {
-  const index = twelveJi.indexOf(targetGround);
-  return twelveGodsMap[yearGround]?.[index] || "없음";
-};
