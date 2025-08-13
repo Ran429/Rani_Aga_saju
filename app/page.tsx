@@ -71,16 +71,22 @@ export default function Home() {
     setIsClient(true);
   }, []);
 
-  const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 8) value = value.slice(0, 8);
-    if (value.length >= 6) {
-      value = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6)}`;
-    } else if (value.length >= 4) {
-      value = `${value.slice(0, 4)}-${value.slice(4)}`;
-    }
-    setBirthDate(value);
-  };
+const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+const raw = e.target.value;
+  if (e.nativeEvent instanceof InputEvent && e.nativeEvent.inputType === "deleteContentBackward") {
+    setBirthDate(raw);
+    return;
+  }
+  let value = raw.replace(/\D/g, "");
+  if (value.length > 8) value = value.slice(0, 8);
+  if (value.length >= 6) {
+    value = `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6)}`;
+  } else if (value.length >= 4) {
+    value = `${value.slice(0, 4)}-${value.slice(4)}`;
+  }
+
+  setBirthDate(value);
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +101,7 @@ export default function Home() {
       missingFields.push("성별");
 
     if (missingFields.length > 0) {
-      alert(`다음 항목을 입력하세요: ${missingFields.join(", ")}`);
+      alert(`다음 항목을 입력해 주세요: ${missingFields.join(", ")}`);
       return;
     }
 
