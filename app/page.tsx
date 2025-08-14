@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image"
+import crystalBall from "./crystal-ball.png"; // ✅ public/ 기준
 import { getSaju } from "./calculators/sajuCalculator";
 import BasicStructure from "./components/SajuExplanation/BasicStructure";
 import TenGodInterpretation from "./components/SajuExplanation/TenGodInterpretation";
@@ -203,193 +205,157 @@ const result = getSaju(birthDate, birthTime, gender, userName);
         </button>
       </form>
 
-      {/* 결과 */}
-      {isClient && sajuResult && sajuResult.year ? (
-        <div className="mt-6 bg-white p-4 shadow-lg rounded-lg w-full max-w-2xl text-black">
-          <h2 className="text-2xl font-bold text-blue-600 text-center">
-            당신의 사주 결과는...!
-          </h2>
+ {/* 결과 */}
+      {isClient && sajuResult && sajuResult.year ? (() => {
+        const user = sajuResult.userInfo || {
+          name: "알 수 없음",
+          birthType: "양력",
+          birthDate: "알 수 없음",
+          birthTime: "알 수 없음",
+          gender: "알 수 없음",
+        };
+        const birthYear = user.birthDate !== "알 수 없음" ? parseInt(user.birthDate.slice(0, 4), 10) : null;
+        const ageText = birthYear ? `만 ${new Date().getFullYear() - birthYear}세` : "알 수 없음";
 
-          {(() => {
-            const user = sajuResult.userInfo || {
-              name: "알 수 없음",
-              birthType: "양력",
-              birthDate: "알 수 없음",
-              birthTime: "알 수 없음",
-              gender: "알 수 없음",
-            };
+        return (
+          <>
+            {/* ✅ 카드 #1: 히어로 + 인사/요약 (표 없음) */}
+            <div className="relative mt-6 w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 text-black">
+              {/* 상단만 투명→흰색 그라데이션 */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-white/0 via-white/60 to-white rounded-t-lg z-0" />
+              <div className="relative z-10">
+                <div className="flex flex-col items-center mb-3">
+                  <div className="relative w-full h-32 sm:h-40 md:h-48">
+                    <div className="absolute inset-0 rounded-full blur-2xl bg-blue-500/30 -z-10" />
+                    <Image
+                      src={crystalBall}
+                      alt="수정구슬"
+                      fill
+                      sizes="100vw"
+                      className="object-contain drop-shadow-xl select-none pointer-events-none"
+                      priority
+                    />
+                  </div>
+                  <h2 className="mt-3 text-2xl font-extrabold text-black tracking-wide text-center">
+                    당신의 사주 결과는...!
+                  </h2>
+                </div>
 
-            const birthYear =
-              user.birthDate !== "알 수 없음"
-                ? parseInt(user.birthDate.slice(0, 4), 10)
-                : null;
-            const ageText = birthYear
-              ? `만 ${new Date().getFullYear() - birthYear}세`
-              : "알 수 없음";
-
-            return (
-              <>
-                <p className="text-sm text-center mt-4">
+                {/* 인사/요약 */}
+                <p className="text-sm text-center mt-2">
                   <span className="block">
-                    안녕하세요! <span className="font-bold">{user.name}</span>님
-                    😊
+                    안녕하세요! <span className="font-bold">{user.name}</span>님 😊
                   </span>
-                  입력해 주신 사주 정보를 기반으로{" "}
-                  <span className="font-bold">{user.name}</span>님의 사주를
-                  분석해 드릴게요.
+                  입력해 주신 정보를 바탕으로 <span className="font-bold">{user.name}</span>님의 사주를 분석해 드릴게요.
                 </p>
                 <p className="text-center font-bold mt-2">
                   {user.birthType} / {user.birthDate} / {ageText}, {user.gender}
                 </p>
+              </div>
+            </div>
 
-                <h3 className="text-xl font-bold text-blue-400 mt-6 text-left">
-                  📌 챕터 1. 나의 사주 구성은?
-                </h3>
+            {/* ✅ 독립 sticky 사주표 */}
+            <div className="sticky top-0 z-50 w-full max-w-2xl mt-4">
+              <div className="bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80 rounded-md shadow-md">
+                <table className="w-full border-collapse border border-gray-400 text-center text-lg font-bold">
+                  <thead>
+                    <tr>
+                      <th className="border border-gray-400 p-2 bg-gray-200">구분</th>
+                      <th className="border border-gray-400 p-2 bg-gray-200">시주</th>
+                      <th className="border border-gray-400 p-2 bg-gray-200">일주</th>
+                      <th className="border border-gray-400 p-2 bg-gray-200">월주</th>
+                      <th className="border border-gray-400 p-2 bg-gray-200">년주</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {/* 천간 */}
+                    <tr>
+                      <td className="border border-gray-400 p-2 bg-gray-100 font-bold">천간</td>
+                      {(["hour", "day", "month", "year"] as const).map((pillarKey) => {
+                        const skyValue = sajuResult?.[pillarKey]?.sky ?? "";
+                        const elementType = getElementColorKey(skyValue as GanKey | JiKey);
+                        const yy = getYY(skyValue as GanKey);
+                        return (
+                          <td
+                            key={pillarKey}
+                            className={`border border-gray-400 p-2 ${elementColors[elementType] ?? ""} ${
+                              yy ? yinYangBgColors[yy] : ""
+                            }`}
+                          >
+                            {skyValue}
+                          </td>
+                        );
+                      })}
+                    </tr>
 
-                {/* 사주 표 */}
-                <div className="sticky top-0 bg-white shadow-md z-50">
-                  <table className="w-full border-collapse border border-gray-400 text-center text-lg font-bold">
-                    <thead>
-                      <tr>
-                        <th className="border border-gray-400 p-2 bg-gray-200">
-                          구분
-                        </th>
-                        <th className="border border-gray-400 p-2 bg-gray-200">
-                          시주
-                        </th>
-                        <th className="border border-gray-400 p-2 bg-gray-200">
-                          일주
-                        </th>
-                        <th className="border border-gray-400 p-2 bg-gray-200">
-                          월주
-                        </th>
-                        <th className="border border-gray-400 p-2 bg-gray-200">
-                          년주
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {/* 천간 */}
-                      <tr>
-                        <td className="border border-gray-400 p-2 bg-gray-100 font-bold">
-                          천간
+                    {/* 십성(천간) */}
+                    <tr>
+                      <td className={tenGodCellStyle}>십성</td>
+                      {(["hour", "day", "month", "year"] as const).map((pillarKey) => (
+                        <td key={pillarKey} className={tenGodCellStyle}>
+                          {getTenGod(sajuResult.day.sky as GanKey, sajuResult?.[pillarKey]?.sky as GanKey) ?? ""}
                         </td>
-                        {(["hour", "day", "month", "year"] as const).map(
-                          (pillarKey) => {
-                            const skyValue =
-                              sajuResult?.[pillarKey]?.sky ?? "";
-                            const elementType = getElementColorKey(
-                              skyValue as GanKey | JiKey
-                            );
-                            const yinYang = getYY(skyValue as GanKey);
-                            return (
-                              <td
-                                key={pillarKey}
-                                className={`border border-gray-400 p-2 ${
-                                  elementColors[elementType] ?? ""
-                                } ${
-                                  yinYang ? yinYangBgColors[yinYang] : ""
-                                }`}
-                              >
-                                {skyValue}
-                              </td>
-                            );
-                          }
-                        )}
-                      </tr>
+                      ))}
+                    </tr>
 
-                      {/* 십성(천간) */}
-                      <tr>
-                        <td className={tenGodCellStyle}>십성</td>
-                        {(["hour", "day", "month", "year"] as const).map(
-                          (pillarKey) => (
-                            <td key={pillarKey} className={tenGodCellStyle}>
-                              {getTenGod(
-                                sajuResult.day.sky as GanKey,
-                                sajuResult?.[pillarKey]?.sky as GanKey
-                              ) ?? ""}
-                            </td>
-                          )
-                        )}
-                      </tr>
+                    {/* 지지 */}
+                    <tr>
+                      <td className="border border-gray-400 p-2 bg-gray-100 font-bold">지지</td>
+                      {(["hour", "day", "month", "year"] as const).map((pillarKey) => {
+                        const groundValue = sajuResult?.[pillarKey]?.ground ?? "";
+                        const elementType = getElementColorKey(groundValue as GanKey | JiKey);
+                        const yy = getYY(groundValue as GanKey);
+                        return (
+                          <td
+                            key={pillarKey}
+                            className={`border border-gray-400 p-2 ${elementColors[elementType] ?? ""} ${
+                              yy ? yinYangBgColors[yy] : ""
+                            }`}
+                          >
+                            {groundValue}
+                          </td>
+                        );
+                      })}
+                    </tr>
 
-                      {/* 지지 */}
-                      <tr>
-                        <td className="border border-gray-400 p-2 bg-gray-100 font-bold">
-                          지지
-                        </td>
-                        {(["hour", "day", "month", "year"] as const).map(
-                          (pillarKey) => {
-                            const groundValue =
-                              sajuResult?.[pillarKey]?.ground ?? "";
-                            const elementType = getElementColorKey(
-                              groundValue as GanKey | JiKey
-                            );
-                            const yinYang = getYY(groundValue as GanKey);
-                            return (
-                              <td
-                                key={pillarKey}
-                                className={`border border-gray-400 p-2 ${
-                                  elementColors[elementType] ?? ""
-                                } ${
-                                  yinYang ? yinYangBgColors[yinYang] : ""
-                                }`}
-                              >
-                                {groundValue}
-                              </td>
-                            );
-                          }
-                        )}
-                      </tr>
+                    {/* 십성(지지) */}
+                    <tr>
+                      <td className={tenGodCellStyle}>십성</td>
+                      {(["hour", "day", "month", "year"] as const).map((pillarKey) => {
+                        const ground = sajuResult?.[pillarKey]?.ground ?? "";
+                        const hidden = getHiddenStems(ground as JiKey);
+                        const first = hidden[0] ?? null;
+                        return (
+                          <td key={pillarKey} className={tenGodCellStyle}>
+                            {first ? getTenGod(sajuResult.day.sky as GanKey, first) : ""}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-                      {/* 십성(지지) */}
-                      <tr>
-                        <td className={tenGodCellStyle}>십성</td>
-                        {(["hour", "day", "month", "year"] as const).map(
-                          (pillarKey) => {
-                            const ground =
-                              sajuResult?.[pillarKey]?.ground ?? "";
-                            const hiddenStems = getHiddenStems(
-                              ground as JiKey
-                            );
-                            const firstStem = hiddenStems[0] ?? null;
-                            return (
-                              <td key={pillarKey} className={tenGodCellStyle}>
-                                {firstStem
-                                  ? getTenGod(
-                                      sajuResult.day.sky as GanKey,
-                                      firstStem
-                                    )
-                                  : ""}
-                              </td>
-                            );
-                          }
-                        )}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+            {/* 여백 */}
+            <div className="h-8" />
 
-                {/* 설명 섹션 */}
-                <div className="mt-8 space-y-8">
-                  <BasicStructure
-                    userName={user.name}
-                    sajuResult={sajuResult}
-                    sanitizedExplanation=""
-                  />
-                  <TenGodInterpretation data={sajuResult.baseTenGods} />
-                  <SpecialGodsSection
-                    data={toSpecialGodsData([
-                      ...(sajuResult.specialGods ?? []),
-                      ...(sajuResult.goodGods ?? []),
-                    ])}
-                  />
-                </div>
-              </>
-            );
-          })()}
-        </div>
-      ) : null}
+            {/* ✅ 카드 #2: 상세 설명 */}
+            <div className="bg-white p-6 shadow-lg rounded-lg w-full max-w-2xl text-black">
+              <div className="mt-2 space-y-8">
+                <BasicStructure userName={user.name} sajuResult={sajuResult} sanitizedExplanation="" />
+                <TenGodInterpretation data={sajuResult.baseTenGods} />
+                <SpecialGodsSection
+                  data={toSpecialGodsData([
+                    ...(sajuResult.specialGods ?? []),
+                    ...(sajuResult.goodGods ?? []),
+                  ])}
+                />
+              </div>
+            </div>
+          </>
+        );
+      })() : null}
     </div>
   );
 }
