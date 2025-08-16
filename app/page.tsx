@@ -1,3 +1,9 @@
+/**
+ * 📄 app/page.tsx
+ * 역할: Next.js 페이지 (라우트 진입점)
+ * exports: SpecialGodHit
+ * imports: react, next/image, ./crystal-ball.png, ./calculators/sajuCalculator, ./components/SajuExplanation/BasicStructure, ./components/SajuExplanation/TenGodInterpretation, ./components/SajuExplanation/SpecialGodsSection, @/app/types/sajuTypes, @/app/utils/elementUtils
+ */
 "use client";
 
 import React, { useState, useEffect } from "react";

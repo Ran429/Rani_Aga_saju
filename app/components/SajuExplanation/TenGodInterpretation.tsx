@@ -1,3 +1,9 @@
+/**
+ * 📄 app/components/SajuExplanation/TenGodInterpretation.tsx
+ * 역할: UI 컴포넌트 (React)
+ * imports: react
+ * referenced by: app/page.tsx
+ */
 import React from "react";
 
 type TenGodType =

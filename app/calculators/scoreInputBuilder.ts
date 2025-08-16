@@ -1,3 +1,10 @@
+/**
+ * 📄 app/calculators/scoreInputBuilder.ts
+ * 역할: 사주 계산 관련 주요 로직
+ * exports: buildScoreInput
+ * imports: @/app/types/sajuTypes, ./scoreCalculator, @/app/utils/elementUtils, @/app/calculators/elementDistribution, @/app/constants/scoreRules
+ * referenced by: app/calculators/sajuCalculator.ts
+ */
 import { SajuResultType } from "@/app/types/sajuTypes";
 import { ScoreInput } from "./scoreCalculator";
 import { GanKey, JiKey,getElementFromGan, getElementFromJi, isGenerating } from "@/app/utils/elementUtils";

@@ -1,3 +1,10 @@
+/**
+ * 📄 app/components/SajuExplanation/data/index.ts
+ * 역할: UI 컴포넌트 (React)
+ * exports: sajuData
+ * imports: @/app/types/sajuTypes, ./1gapData, ./2eulData, ./3byeongData, ./4jeongData, ./5muData, ./6giData, ./7gyeongData, ./8sinData, ./9imData, ./10gyeData
+ * referenced by: app/components/SajuExplanation/BasicStructure.tsx
+ */
 // /Users/lovek/Documents/GitHub/Rani_Aga_saju/app/components/SajuExplanation/data/index.ts
 
 import { SajuDataType } from "@/app/types/sajuTypes";

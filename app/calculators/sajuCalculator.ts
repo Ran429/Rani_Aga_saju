@@ -1,3 +1,10 @@
+/**
+ * 📄 app/calculators/sajuCalculator.ts
+ * 역할: 사주 계산 관련 주요 로직
+ * exports: getSaju
+ * imports: ../utils/dateUtils, ../utils/elementUtils, ./elementDistribution, ../utils/daewoonUtils, ../utils/fortuneUtils, ../utils/specialGodsUtils, ../utils/goodGodsUtils, ../types/sajuTypes, ./scoreInputBuilder, ./scoreCalculator
+ * referenced by: app/page.tsx
+ */
 import {
   calculateYearPillar,
   calculateMonthPillar,

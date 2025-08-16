@@ -1,3 +1,10 @@
+/**
+ * 📄 app/components/SajuExplanation/SpecialGodsSection.tsx
+ * 역할: UI 컴포넌트 (React)
+ * exports: SpecialGodsData
+ * imports: react
+ * referenced by: app/page.tsx
+ */
 // app/components/SajuExplanation/SpecialGodsSection.tsx
 import React from "react";
 

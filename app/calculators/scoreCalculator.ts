@@ -1,3 +1,10 @@
+/**
+ * 📄 app/calculators/scoreCalculator.ts
+ * 역할: 사주 계산 관련 주요 로직
+ * exports: ScoreInput, ScoreResult, calculate_score_with_limits
+ * imports: @/app/constants/scoreRules
+ * referenced by: app/calculators/sajuCalculator.ts, app/calculators/scoreInputBuilder.ts
+ */
 // app/calculators/scoreCalculator.ts
 import rules from "@/app/constants/scoreRules";
 

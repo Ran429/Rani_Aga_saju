@@ -1,3 +1,10 @@
+/**
+ * 📄 app/utils/goodGodsUtils.ts
+ * 역할: 공통 유틸 함수 모음
+ * exports: checkCheondeok, checkSamgi, checkCheoneul, checkMunchang, checkWoldeok, checkAmrok, GoodGodHit, checkGoodGodsAll, checkWolgong, checkCheonui
+ * imports: ./elementUtils, ../types/sajuTypes
+ * referenced by: app/calculators/sajuCalculator.ts
+ */
 // C:\Users\zeroj\saju\Rani_Aga_saju\app\utils\goodGodsUtils.ts
 
 import { JiKey, GanKey } from "./elementUtils";

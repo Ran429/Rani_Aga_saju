@@ -1,3 +1,9 @@
+/**
+ * 📄 app/layout.tsx
+ * 역할: Next.js 전역 레이아웃
+ * exports: metadata
+ * imports: next, next/font/google, ./globals.css
+ */
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";

@@ -1,3 +1,10 @@
+/**
+ * 📄 app/utils/dateUtils.ts
+ * 역할: 공통 유틸 함수 모음
+ * exports: calculateMonthPillar, getYearGanjiFromDate, getDaewoonStartAge, getCurrentYearGanji, calculateHourPillar, getYearGanji, JiKey, Gender, GanKey, calculateDayPillar, getDaewoonTimeline, DaewoonItem, calculateYearPillar
+ * imports: ../constants/elements, ../constants/solarTerms
+ * referenced by: app/utils/elementUtils.ts, app/utils/daewoonUtils.ts, app/calculators/sajuCalculator.ts
+ */
 // C:\Users\zeroj\saju\Rani_Aga_saju\app\utils\dateUtils.ts
 import { tenKan, twelveJi } from "../constants/elements";
 import { solarTerms } from "../constants/solarTerms";

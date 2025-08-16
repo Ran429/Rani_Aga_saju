@@ -1,3 +1,10 @@
+/**
+ * 📄 app/utils/fortuneUtils.ts
+ * 역할: 공통 유틸 함수 모음
+ * exports: calculateTwelveFortunes
+ * imports: ../constants/elements, ./elementUtils
+ * referenced by: app/calculators/sajuCalculator.ts
+ */
 // src/utils/fortuneUtils.ts
 import { twelveJi } from "../constants/elements";
 import { GanKey, JiKey } from "./elementUtils";

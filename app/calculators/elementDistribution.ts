@@ -1,3 +1,10 @@
+/**
+ * 📄 app/calculators/elementDistribution.ts
+ * 역할: 사주 계산 관련 주요 로직
+ * exports: BRANCH_TO_SEASON, calculateElementDistribution
+ * imports: ../constants/elements, ../constants/unions, ../utils/elementUtils
+ * referenced by: app/calculators/sajuCalculator.ts
+ */
 //C:\Users\zeroj\saju\Rani_Aga_saju\app\calculators\elementDistribution.ts
 import { fiveElements } from "../constants/elements";
 import { heavenlyUnion, earthlyUnion, earthlyConflict } from "../constants/unions";

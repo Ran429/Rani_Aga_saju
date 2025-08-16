@@ -1,3 +1,10 @@
+/**
+ * 📄 app/utils/specialGodsUtils.ts
+ * 역할: 공통 유틸 함수 모음
+ * exports: checkDohwa, checkSpecialGodsAll, checkGuimun, checkHwage, checkWonjing, checkYangin, checkYeokmaStrict, checkHyeonchimWeighted, checkGwaigang, checkBaekho, SpecialOptions
+ * imports: ./elementUtils, ../types/sajuTypes
+ * referenced by: app/calculators/sajuCalculator.ts
+ */
 // C:\Users\zeroj\saju\Rani_Aga_saju\app\utils\specialGodsUtils.ts
 
 import { JiKey, GanKey } from "./elementUtils";

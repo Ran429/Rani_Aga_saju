@@ -1,3 +1,9 @@
+/**
+ * 📄 app/components/SajuExplanation/BasicStructure.tsx
+ * 역할: UI 컴포넌트 (React)
+ * imports: react, next/image, @/app/utils/elementUtils, @/app/calculators/elementDistribution, @/app/utils/daewoonUtils, @/app/types/sajuTypes, @/app/types/sajuTypes, ./data, @/app/calculators/scoreInputBuilder, @/app/calculators/scoreCalculator
+ * referenced by: app/page.tsx
+ */
 // app/components/SajuExplanation/BasicStructure.tsx
 import React, { useMemo, useState, useEffect } from "react";
 

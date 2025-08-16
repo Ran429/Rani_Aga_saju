@@ -1,3 +1,7 @@
+/**
+ * 📄 app/components/SajuExplanation/SummarySection.tsx
+ * 역할: UI 컴포넌트 (React)
+ */
 // SummarySection.tsx
 export default function SummarySection() {
   return (

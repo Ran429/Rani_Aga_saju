@@ -1,3 +1,10 @@
+/**
+ * 📄 app/components/SajuExplanation/data/10gyeData.ts
+ * 역할: UI 컴포넌트 (React)
+ * exports: gyeData
+ * imports: @/app/types/sajuTypes
+ * referenced by: app/components/SajuExplanation/data/index.ts
+ */
 
 import { SajuDataType } from "@/app/types/sajuTypes";
 

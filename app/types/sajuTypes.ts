@@ -1,3 +1,10 @@
+/**
+ * 📄 app/types/sajuTypes.ts
+ * 역할: 타입 정의 모음
+ * exports: SajuExplanationKey, GoodGodHit, FourPillars, SpecialGodsSet, Gender, splitBirthDate, SajuDataType, normalizeGender, SajuResult, DaewoonItem, BirthYMD, BasicStructureProps, SpecialGodHit, Pillar, SajuResultType, TenGodCount, FortuneCategory
+ * imports: ../utils/elementUtils
+ * referenced by: app/utils/specialGodsUtils.ts, app/utils/goodGodsUtils.ts, app/calculators/sajuCalculator.ts
+ */
 // C:\Users\zeroj\saju\Rani_Aga_saju\app\types\sajuTypes.ts
 import { GanKey, JiKey } from "../utils/elementUtils";
 

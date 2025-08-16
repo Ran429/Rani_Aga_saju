@@ -1,3 +1,10 @@
+/**
+ * 📄 app/components/SajuExplanation/data/5muData.ts
+ * 역할: UI 컴포넌트 (React)
+ * exports: muData
+ * imports: @/app/types/sajuTypes
+ * referenced by: app/components/SajuExplanation/data/index.ts
+ */
 import { SajuDataType } from "@/app/types/sajuTypes";
 
 export const muData: SajuDataType = {

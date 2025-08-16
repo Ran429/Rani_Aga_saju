@@ -1,3 +1,10 @@
+/**
+ * 📄 app/utils/daewoonUtils.ts
+ * 역할: 공통 유틸 함수 모음
+ * exports: JiKey, GanKey, getDaewoonList, calculateDaewoonPeriod
+ * imports: ../constants/solarTerms, ../constants/elements, ./dateUtils
+ * referenced by: app/calculators/sajuCalculator.ts
+ */
 // app/utils/daewoonUtils.ts
 import { solarTerms } from "../constants/solarTerms";
 import { tenKan, twelveJi } from "../constants/elements";

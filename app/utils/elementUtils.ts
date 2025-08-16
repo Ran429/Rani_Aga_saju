@@ -1,3 +1,10 @@
+/**
+ * 📄 app/utils/elementUtils.ts
+ * 역할: 공통 유틸 함수 모음
+ * exports: getElementColorKey, getElementFromGan, JiKey, YinYangKey, GanKey, getElementFromJi, getTenGodDetail, isGenerating, getYY, yinYangBgColors, getTenGod, baseElements, FiveElementType, elementColors, getHiddenStems, getElement, RelKey
+ * imports: ../constants/elements, ./dateUtils
+ * referenced by: app/types/sajuTypes.ts, app/utils/specialGodsUtils.ts, app/utils/fortuneUtils.ts, app/utils/goodGodsUtils.ts, app/utils/relationUtils.ts, app/calculators/sajuCalculator.ts, app/calculators/elementDistribution.ts
+ */
 // C:\Users\zeroj\saju\Rani_Aga_saju\app\utils\elementUtils.ts
 import { fiveElements, yinYang, rel, tenKan } from "../constants/elements";
 import { GanKey as DGanKey, JiKey as DJiKey } from "./dateUtils";
