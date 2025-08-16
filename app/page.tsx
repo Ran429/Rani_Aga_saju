@@ -23,6 +23,8 @@ import LoveFortune from "./components/fortunes/LoveFortune";
 import CareerFortune from "./components/fortunes/CareerFortune";
 import MoneyFortune from "./components/fortunes/MoneyFortune";
 import StudyFortune from "./components/fortunes/StudyFortune";
+import HealthFortune from "./components/fortunes/HealthFortune";
+
 
 const tenGodCellStyle = "border border-gray-400 p-1 text-sm text-gray-700";
 
@@ -45,7 +47,8 @@ const fortuneSections = [
   { id: "love", label: "연애운" },
   { id: "career", label: "직업운" },
   { id: "money", label: "재물운" },
-  { id: "study", label: "학업운" }, // ✅ 추가
+  { id: "study", label: "학업운" },
+  { id: "health", label: "건강운"} // ✅ 추가
 ];
 
 function toSpecialGodsData(sg: unknown): SpecialGodsData {
@@ -378,6 +381,7 @@ export default function Home() {
               {activeSection === "career" && <CareerFortune sajuResult={sajuResult} />}
               {activeSection === "money" && <MoneyFortune sajuResult={sajuResult} />}
               {activeSection === "study" && <StudyFortune sajuResult={sajuResult} />}
+              {activeSection === "health" && <HealthFortune sajuResult={sajuResult} />}
             </div>
 
                         {/* ✅ 하단탭 네비게이션 */}
