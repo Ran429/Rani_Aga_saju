@@ -32,7 +32,7 @@ const GROUPS: { label: "비겁" | "식상" | "재성" | "관성" | "인성"; mem
 export default function TenGodInterpretation({ data }: { data: TenGodCount }) {
   return (
     <section className="mt-6">
-      <h3 className="text-sm font-bold text-gray-700 mb-3">📌 십성 해석</h3>
+      <h3 className="text-sm font-bold text-gray-700 mb-3">📌 3-2. 십성 해석</h3>
 
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         <table className="min-w-full border-collapse text-xs text-slate-600">

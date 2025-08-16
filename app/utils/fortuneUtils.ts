@@ -46,3 +46,17 @@ export const calculateTwelveFortunes = (
 
   return twelveFortunesOrder[distance];
 };
+
+export const twelveFortunesDescriptions: Record<string, string> = {  장생: "새로운 시작, 갓 태어난 아기의 단계 👶",
+  목욕: "깨끗이 씻고 세상에 나서는 단계 🛁",
+  관대: "청년기, 사회적으로 활발히 활동하는 시기 💪",
+  건록: "안정과 기반을 갖춘 단계 🏡",
+  제왕: "정점에 올라 힘이 강한 시기 👑",
+  쇠: "기운이 조금씩 줄어드는 단계 🍂",
+  병: "몸이 아프듯 약해지는 시기 🤒",
+  사: "죽음을 맞이하는 단계 ⚰️",
+  묘: "무덤에 들어간 상태, 휴식의 시기 🪦",
+  절: "다시 태어나기 전, 끊어짐의 단계 ✂️",
+  태: "씨앗처럼 새로운 생명의 시작 🌱",
+  양: "태아가 자라나는 시기 🤰",
+};

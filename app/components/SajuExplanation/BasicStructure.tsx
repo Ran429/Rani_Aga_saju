@@ -14,10 +14,10 @@ import { calculateElementDistribution } from "@/app/calculators/elementDistribut
 import { getDaewoonList } from "@/app/utils/daewoonUtils";
 import type { BasicStructureProps } from "@/app/types/sajuTypes"; // 이미 있다면 유지
 import { splitBirthDate, normalizeGender, type Gender } from "@/app/types/sajuTypes";
-import { sajuData } from "./data";
-
 import { buildScoreInput } from "@/app/calculators/scoreInputBuilder";
 import { calculate_score_with_limits as calculateScore } from "@/app/calculators/scoreCalculator";
+import { twelveFortunesDescriptions } from "@/app/utils/fortuneUtils";
+
 
 /** 내부 전용 타입 */
 type ElementType = "목" | "화" | "토" | "금" | "수";
@@ -220,7 +220,6 @@ function ScoreBadge({ score, userName }: { score: number; userName: string }) {
   );
 }
 
-
 /** 색상 맵 (ElementType으로 타입 안전) */
 const elementColors: Record<ElementType, string> = {
   목: "bg-white border-green-400",
@@ -294,11 +293,7 @@ const getAnimalAndColor = (
 };
 
 
-export default function BasicStructure({
-  userName,
-  sajuResult,
-  sanitizedExplanation,
-}: BasicStructureProps) {
+export default function BasicStructure({ userName, sajuResult,}: BasicStructureProps) {
   // 1) 먼저 필요한 계산/훅들을 "항상" 호출
   const daySky = sajuResult.day.sky as GanKey;
   const dayGround = sajuResult.day.ground;
@@ -397,108 +392,108 @@ const forwardTxt = (isYangYearStem && isMale) || (!isYangYearStem && !isMale) ? 
 const scoreInput = buildScoreInput(sajuResult, "테스트");
 const scoreResult = calculateScore(scoreInput);
 
-
   return (
     <section>
-      <hr className="my-4 border-t border-gray-300" />
-
        {/* 📌 점수 표시 영역 */}
       <ScoreBadge score={scoreResult.total} userName={userName} />
 
       <hr className="my-4 border-t border-gray-300" />
-      {/* 📌 1. 사주의 기본 구성 */}
-      <h2 className="text-lg font-bold mb-3">📌 1. 사주의 기본 구성</h2>
-      <p className="mb-4 text-sm text-gray-700 leading-relaxed">
-        사주는 태어난 <strong>연(年)·월(月)·일(日)·시(時)</strong>를 바탕으로 네 개의 기둥으로 구성됩니다.
-        <br />
-        상단의 표의 가로를 보면, <strong>연“주”, 월“주”, 일“주”, 시“주”</strong>라고 되어있는 부분이 그것이죠!
-        <br />
-        또, 세로로 보면 <strong>천간(天干)</strong>과 <strong>지지(地支)</strong>로 이루어져 있으며,
-        <br />
-        이 조합이 한 사람의 타고난 성향과 평생의 운세 흐름을 형성합니다.
-      </p>
+{/* 📌 1. 사주의 기본 구조 */}
+      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-1. 사주의 기본 구조</h3>
+<p className="mb-4 text-sm text-gray-700 leading-relaxed">
+  사주는 내가 태어난 <strong>연도, 월, 날짜, 시간</strong> 네 가지 정보로 만들어져요.
+  <br />
+  그래서 흔히 &ldquo;네 개의 기둥&rdquo;이라고 부르는데, 이를 각각 <b>연주 · 월주 · 일주 · 시주</b>라고 해요.
+  <br /><br />
+  간단히 말하면,
+  <br />- 연주 👉 나의 뿌리와 조상, 인생관
+  <br />- 월주 👉 부모, 형제, 사회성
+  <br />- 일주 👉 나 자신과 배우자, 감정
+  <br />- 시주 👉 자녀, 미래, 지향점
+  <br /><br />
+  즉, 사주는 <b>나와 가족, 그리고 앞으로의 삶</b>을 담고 있는 <span className="underline">인생 지도</span>라고 보면 돼요 ✨
+  <br /><br />
+  사주는 동양철학을 바탕으로 만들어졌어요.  <br />
+  기본 원리는 <b>&ldquo;부족하거나 과하면 좋지 않다&rdquo;</b>는 것이고,  <br />
+  <b>음양과 오행의 균형</b>을 맞추는 것을 중요하게 여깁니다.  
+  <br /><br />
+  그래서 올해의 운세든, 결혼운이든 결국은  
+  내 사주에서 <b>부족한 부분을 채워주는 해(혹은 배우자)</b>,  <br/>
+  또는 <b>과한 부분을 눌러주는 해(혹은 배우자)</b>를 찾는 것이  
+  사주 풀이의 핵심이라고 할 수 있어요.
+</p>
+
+<hr className="my-4 border-t border-gray-300" />
+
+{/* 📌 1-3. 나의 일주 성향 */}
+      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-3. 나의 일주 성향</h3>
+<p className="text-sm text-left text-gray-700 mt-2">
+  사주에서는 특히 &ldquo;일간(日干)&rdquo;이 중요한데, 쉽게 말해 <b>나 자신을 상징하는 기운</b>이에요.
+</p>
+<div className="text-center mt-4">
+  <span className="text-3xl text-gray-700 align-top inline-block">“</span>
+  {userName}님은{" "}
+  <strong>{skyDescriptions[daySky] || "아직 설명이 준비되지 않았어요 😅"}</strong>
+  <span className="text-3xl text-gray-700 align-top inline-block">”</span>
+</div>
+<p className="text-sm text-gray-600 mt-2 text-center">
+  → 즉, {userName}님은 태어날 때부터 이런 기운을 가지고 세상에 나온 거예요 🌱
+</p>
+
+<hr className="my-4 border-t border-gray-300" />
+
+{/* 📌 3. 나의 일주 동물 */}
+      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-4. 나의 일주 동물</h3>
+<div className="mt-6 w-full flex flex-col items-center">
+  <div
+    className={`w-32 h-32 rounded-full border-4 flex items-center justify-center overflow-hidden ${elementColors[dayElement]}`}
+  >
+    <Image
+      src={animalData.imageUrl}
+      alt="Saju Animal"
+      width={128}
+      height={128}
+      className="w-full h-full object-contain"
+    />
+  </div>
+  <p className="text-black-900 text-lg font-bold mt-2">{animalData.animal}</p>
+
+  <p className="text-sm text-left text-gray-700 mt-6 w-full break-words">
+    {userName}님의 일주는 <b>{daySky}{dayGround}일주</b>이고, 이를 동물로 비유하면{" "}
+    <b>{animalData.animal}</b>이에요 🐾
+    <br /><br />
+    사주는 다섯 가지 기운(오행: 나무·불·흙·금속·물)과 12지 동물이 함께 어우러져서 만들어지는데,
+    이 조합 덕분에 나만의 &ldquo;캐릭터&rdquo;가 생기는 거예요.
+    <br />
+    예를 들어 같은 말이라도, 붉은 말 🔥과 흰 말 ⚪️은 성향이 완전히 다르답니다!
+  </p>
+</div>
+
+<hr className="my-4 border-t border-gray-300" />
+
+{/* 📌 2. 내 사주의 오행 분포 */}
+<h2 className="text-lg font-bold mb-3">2. 내 사주의 오행</h2>
+<p className="text-sm text-gray-700 leading-relaxed mt-2">
+  사주는 다섯 가지 기운, 즉 <b>목(木), 화(火), 토(土), 금(金), 수(水)</b>로 이루어져 있어요.  
+  도넛 모양의 차트는 지금 {userName}님의 사주에서 어떤 기운이 많고, 어떤 기운이 부족한지를 한눈에 보여주는 거예요.  
+  쉽게 말하면, 나에게는 어떤 에너지가 넘치고, 또 어떤 에너지를 보충해야 하는지 확인하는 도구라고 생각하면 돼요.
+</p>
+
+<p className="text-sm text-gray-700 leading-relaxed mt-2">
+  아래의 체크박스를 눌러보면 조금씩 다른 해석이 적용돼요:
+  <br />- <b>조후</b>: 계절에 따른 기운의 균형을 맞추는 보정이에요.
+  <br />- <b>궁성 가중</b>: 사주의 핵심 별자리 같은 부분을 강조해주는 해석이에요.
+  <br />- <b>합·충</b>: 기운들이 서로 만나서 힘을 합치거나, 충돌하는 관계를 반영한 거예요.
+</p>
 
       <hr className="my-4 border-t border-gray-300" />
 
-      {/* 📌 1-2. 일지 설명 */}
-      <p className="text-sm text-left text-gray-700 mt-6 w-full break-words">
-        내 사주를 비유하면 무엇일까요? <br />
-        아마 사주를 한 번이라도 보러 가셨다면, 이런 말을 들어보셨을걸요? <br />
-      </p>
-      <div className="text-center mt-2">
-        <span className="text-3xl text-gray-700 align-top inline-block">“</span>
-        {userName}님은{" "}
-        <strong>{skyDescriptions[daySky] || "특별한 비유 설명이 준비되지 않았습니다."}</strong>
-        <span className="text-3xl text-gray-700 align-top inline-block">”</span>
-      </div>
-
-      {/* 📌 1-1. 인생운 출력 */}
-      <div className="text-sm text-left text-gray-700 mt-4 w-full break-words">
-        {sajuData[sajuResult.day.sky]?.[
-          (sajuResult.userInfo?.gender as "남성" | "여성") ?? "남성"
-        ]?.인생운
-          ? sajuData[sajuResult.day.sky][
-              (sajuResult.userInfo?.gender as "남성" | "여성") ?? "남성"
-            ].인생운!.replace("{userName}", userName)
-          : "인생운 데이터가 준비되지 않았습니다."}
-      </div>
-
-      <hr className="my-4 border-t border-gray-300" />
-
-      {/* 📌 1-1. 각 기둥의 의미 */}
-      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-1. 사주에서 각 기둥의 의미</h3>
-      <p className="text-sm text-left text-gray-700">
-        <span>① 년주 → 조상과 인생관</span>
-        <br />
-        <span>② 월주 → 부모, 형제, 사회성</span>
-        <br />
-        <span>③ 일주 → 배우자궁, 감정관, 나 자신</span>
-        <br />
-        <span>④ 시주 → 자식, 미래, 지향점</span>
-        <br />
-      </p>
-
-      <hr className="my-4 border-t border-gray-300" />
-
-      {/* 📌 1-2. 나의 일주 동물 */}
-      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-2. 나의 일주 동물</h3>
-      <div className="mt-6 w-full flex flex-col items-center">
-        <div
-          className={`w-32 h-32 rounded-full border-4 flex items-center justify-center overflow-hidden ${elementColors[dayElement]}`}
-        >
-          <Image
-            src={animalData.imageUrl}
-            alt="Saju Animal"
-            width={128}
-            height={128}
-            className="w-full h-full object-contain"
-          />
-        </div>
-        <p className="text-black-900 text-lg font-bold mt-2">{animalData.animal}</p>
-
-        {/* 📌 일주동물 설명 */}
-        <p className="text-sm text-left text-gray-700 mt-6 w-full break-words">
-          <span className="font-bold">{userName}</span>님의 일주 동물은{" "}
-          <span className="font-bold">{animalData.animal}</span>입니다.
-          <br />
-          먼저, {userName}님의 일주는 {daySky}
-          {dayGround}일주였죠? 😊
-          <br />
-          사주는 다섯 가지 요소(오행: 목, 화, 토, 금, 수)로 구성되어 있어요.
-          <br />
-          오행 중에서 일간인 “<strong>{daySky}</strong>”는 <strong>{dayElement}</strong> 속성이며,
-          <br />
-          일지인 “<strong>{dayGround}</strong>”의 동물과 조합되면{" "}
-          <span className="font-bold">{animalData.animal}</span>이 됩니다.
-          <br />
-          그렇다면, 나와 같은 일주 동물을 가진 사람들은 어떤 성향을 가지고 있을까요? ✨
-        </p>
-      </div>
-
-      <hr className="my-4 border-t border-gray-300" />
-
-      {/* 📌 1-3. 현재 사주의 오행 분포 (도넛) */}
-      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-3. 현재 사주의 오행 분포</h3>
+      {/* 📌 2-1. 현재 사주의 오행 분포 (도넛) */}
+      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 2-1. 현재 사주의 오행 분포</h3>
+      <p className="text-sm text-gray-700 leading-relaxed mt-2">
+        아래 옵션은 사주 해석에 영향을 주는 추가 설정이에요. <br /> 깊게 보지 않아도 되고 나에게는 어떤 오행이 많구나, 부족하구나를 알고 넘어가면 됩니다. <br />
+        가장 많은 오행은 도넛 차트 중앙에 표시되니 참고하세요! <br /><br />
+        현재 {userName}님의 사주에서 오행은 다음과 같이 분포되어 있어요: </p>
 {/* 옵션 토글 */}
 <div className="mt-2 flex flex-wrap items-center gap-4 text-[12px] text-slate-700">
   <label className="inline-flex items-center gap-1">
@@ -537,41 +532,47 @@ const scoreResult = calculateScore(scoreInput);
 
 {/* 단계별 강/약 요약 */}
 <div className="mt-3 grid gap-2 text-[12px] text-slate-600 md:grid-cols-3">
-  <p>
+ <p>
     <b className="text-slate-800">현재 사주</b>에서는{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(rawForChart, domRaw)}</span> 기운이 강하며,
-    <span className="font-semibold text-slate-800"> {formatWithPct(rawForChart, weakRaw)}</span> 기운이 부족합니다.
+    <span className="font-semibold text-slate-800">{formatWithPct(rawForChart, domRaw)}</span> 기운이 강하고,{" "}
+    <span className="font-semibold text-slate-800">{formatWithPct(rawForChart, weakRaw)}</span> 기운이 부족해요.
   </p>
   <p>
-    <b className="text-slate-800">조후+궁성 보정 후</b>에서는{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(chohuForChart, domCP)}</span> 기운이 강하며,
-    <span className="font-semibold text-slate-800"> {formatWithPct(chohuForChart, weakCP)}</span> 기운이 부족합니다.
+    <b className="text-slate-800">조후+궁성 보정 후</b>에는{" "}
+    <span className="font-semibold text-slate-800">{formatWithPct(chohuForChart, domCP)}</span> 기운이 두드러지고,{" "}
+    <span className="font-semibold text-slate-800">{formatWithPct(chohuForChart, weakCP)}</span> 기운이 약해요.
   </p>
   <p>
     <b className="text-slate-800">합·충 적용 후</b>에는{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(adjustedElements, domAdj)}</span> 기운이 강하며,
-    <span className="font-semibold text-slate-800"> {formatWithPct(adjustedElements, weakAdj)}</span> 기운이 부족합니다.
+    <span className="font-semibold text-slate-800">{formatWithPct(adjustedElements, domAdj)}</span> 기운이 강하고,{" "}
+    <span className="font-semibold text-slate-800">{formatWithPct(adjustedElements, weakAdj)}</span> 기운이 상대적으로 부족해요.
   </p>
 </div>
+
       <hr className="my-4 border-t border-gray-300" />
 
-      {/* 📌 1-4. 대운 */}
-      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-4. 나의 대운</h3>
-      <p className="text-sm text-left text-gray-700">
-  대운은 10년 주기로 변화하는 운세입니다.&nbsp;
+ {/* 📌 3. 대운 */}
+ <h2 className="text-lg font-bold mb-3">3. 내 사주의 대운과 십이운성</h2>
+
+      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 3-1. 나의 대운</h3>
+     <p className="text-sm text-left text-gray-700 leading-relaxed">
+  &ldquo;대운&rdquo;이란, <b>10년마다 바뀌는 큰 흐름의 운세</b>예요.  
+  쉽게 말해, 인생의 긴 계절 같은 거죠 🍂🌸☀️❄️  <br />
+  어떤 시기에는 불 같은 열정이 강조되고, 또 어떤 시기에는 물처럼 차분한 기운이 흐르기도 해요.  
+  <br />
+  <br />
   {myDaewoon.length ? (
     <>
-      {userName}님은 <b>{startAge}세</b>부터 시작(
-      <span className="text-slate-500">{forwardTxt}</span>)합니다.
+      {userName}님은 <b>{startAge}세</b>부터 대운이 시작되며, 
+      현재 흐름은 <span className="text-slate-500">{forwardTxt}</span> 방향으로 흘러가고 있어요.
     </>
   ) : (
     `${userName}님의 대운 시작 정보를 계산하지 못했습니다.`
   )}
 </p>
 
-
 {/* 그리드 카드형 대운 */}
-<div className="mt-3 flex flex-wrap justify-center gap-1.5">
+<div className="mt-3 flex flex-wrap justify-center items-stretch gap-1.5">
   {myDaewoon.map((item) => {
    // ✅ daewoonUtils.getDaewoonList가 돌려준 대운 간지 사용
    const gan = (item.pillarGan ?? item.pillar?.[0]) as GanKey;
@@ -591,8 +592,8 @@ const scoreResult = calculateScore(scoreInput);
           isActive ? "ring-2 ring-rose-500 border-transparent" : "border-slate-200",
         ].join(" ")}
       >
-        <div className="text-center text-[13px] font-semibold text-slate-900">{item.age}세</div>
-        <div className="text-center text-[12px] text-slate-500">{item.year}년</div>
+        <div className="text-center text-[12px] font-semibold text-slate-900">{item.age}세</div>
+        <div className="text-center text-[11px] text-slate-500">{item.year}년</div>
 
         {/* 임 / 오 → 세로 배치 */}
         <div className="mt-1 flex flex-col gap-1">
@@ -606,29 +607,64 @@ const scoreResult = calculateScore(scoreInput);
 
       <hr className="my-4 border-t border-gray-300" />
 
-      {/* 📌 1-5. 십이운성 및 신살 */}
-      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-5. 나의 십이운성 및 신살</h3>
-      <p className="text-sm text-left text-gray-700">
-        🔹 연주의 십이운성: {sajuResult.twelveFortunes.year}
-        <br />
-        🔹 월주의 십이운성: {sajuResult.twelveFortunes.month}
-        <br />
-        🔹 일주의 십이운성: {sajuResult.twelveFortunes.day}
-        <br />
-        🔹 시주의 십이운성: {sajuResult.twelveFortunes.hour}
-      </p>
 
+{/* 📌 2-3. 십이운성 및 신살 */}
+<h3 className="text-sm font-bold text-gray-700 mt-6">📌 3-2. 나의 십이운성</h3>
+<p className="text-sm text-left text-gray-700 leading-relaxed mb-4">
+  &ldquo;십이운성&rdquo;은 사람의 인생을 12단계 성장 스토리로 본 거예요.  
+  <br />
+  <b>태어나고 → 자라고 → 꽃피우고 → 쉬는</b> 흐름처럼,  
+  내 사주가 어느 단계에 있는지를 보여주죠.    
+</p>
+
+<div className="grid grid-cols-4 gap-3 mt-4">
+  {/* 시주 */}
+  <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
+    <p className="font-bold text-slate-800">시주<br/>(미래·지향점)</p>
+    <span className="inline-block bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded mt-2">
+      {sajuResult.twelveFortunes.hour}
+    </span>
+    <p className="text-xs text-gray-700 mt-2">
+      {twelveFortunesDescriptions[sajuResult.twelveFortunes.hour]}
+    </p>
+  </div>
+
+  {/* 일주 */}
+  <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
+    <p className="font-bold text-slate-800">일주<br/>(나 자신·전환점)</p>
+    <span className="inline-block bg-sky-100 text-sky-700 font-bold px-2 py-0.5 rounded mt-2">
+      {sajuResult.twelveFortunes.day}
+    </span>
+    <p className="text-xs text-gray-700 mt-2">
+      {twelveFortunesDescriptions[sajuResult.twelveFortunes.day]}
+    </p>
+  </div>
+
+  {/* 월주 */}
+  <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
+    <p className="font-bold text-slate-800">월주<br/>(사회성·직업)</p>
+    <span className="inline-block bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded mt-2">
+      {sajuResult.twelveFortunes.month}
+    </span>
+    <p className="text-xs text-gray-700 mt-2">
+      {twelveFortunesDescriptions[sajuResult.twelveFortunes.month]}
+    </p>
+  </div>
+
+  {/* 년주 */}
+  <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
+    <p className="font-bold text-slate-800">년주<br/>(과거·뿌리)</p>
+    <span className="inline-block bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded mt-2">
+      {sajuResult.twelveFortunes.year}
+    </span>
+    <p className="text-xs text-gray-700 mt-2">
+      {twelveFortunesDescriptions[sajuResult.twelveFortunes.year]}
+    </p>
+  </div>
+</div>
       <hr className="my-4 border-t border-gray-300" />
 
-      {/* 📌 1-6. 일주 해석 */}
-      <h3 className="text-sm font-bold text-gray-700 mt-6">
-        📌 1-6. {daySky}
-        {dayGround} 일주의 해석
-      </h3>
-      <p
-        className="text-sm text-left text-gray-700"
-        dangerouslySetInnerHTML={{ __html: sanitizedExplanation }}
-      />
+
     </section>
   );
 }
