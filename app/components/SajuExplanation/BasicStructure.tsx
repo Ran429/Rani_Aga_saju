@@ -8,7 +8,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 
 import Image from "next/image";
-import { getElement, GanKey, JiKey } from "@/app/utils/elementUtils";
+import { getElement, GanKey, JiKey, getTenGod, getHiddenStems } from "@/app/utils/elementUtils";
 import { calculateElementDistribution } from "@/app/calculators/elementDistribution";
 
 import { getDaewoonList } from "@/app/utils/daewoonUtils";
@@ -17,6 +17,8 @@ import { splitBirthDate, normalizeGender, type Gender } from "@/app/types/sajuTy
 import { buildScoreInput } from "@/app/calculators/scoreInputBuilder";
 import { calculate_score_with_limits as calculateScore } from "@/app/calculators/scoreCalculator";
 import { twelveFortunesDescriptions } from "@/app/utils/fortuneUtils";
+import YearlySeunCarousel from "@/app/components/YearlySeun/YearlySeunCarousel";
+import { getDaewoonBucket } from "@/app/utils/dateUtils";
 
 
 /** 내부 전용 타입 */
@@ -298,7 +300,14 @@ export default function BasicStructure({ userName, sajuResult,}: BasicStructureP
   const daySky = sajuResult.day.sky as GanKey;
   const dayGround = sajuResult.day.ground;
   const dayElement = getElement(daySky) as ElementType;
+  const tenGodOfGan = React.useCallback((gan: GanKey) => {
+    return getTenGod(daySky, gan);
+  }, [daySky]);
 
+    const tenGodOfJi = React.useCallback((ji: JiKey) => {
+    const [main] = getHiddenStems(ji);      // 지장의 주기준
+    return main ? getTenGod(daySky, main) : "";
+  }, [daySky]);
   const animalData = getAnimalAndColor(dayElement, dayGround);
 
 
@@ -310,6 +319,16 @@ export default function BasicStructure({ userName, sajuResult,}: BasicStructureP
  const [applyChohu, setApplyChohu] = useState(true);
  const [applyPalace, setApplyPalace] = useState(true);
  const [applyUnions, setApplyUnions] = useState(true);
+
+ // 대운-세운 연동 상태
+const [activeAge, setActiveAge] = useState<number | undefined>(undefined); // 선택된 나이
+const [activeRange, setActiveRange] = useState<{start:number; end:number} | null>(null);
+
+const yearlySeunForView = useMemo(() => {
+  const all = sajuResult.yearlySeun;
+  if (!activeRange) return all; // 선택 전에는 전체
+  return all.filter(x => x.age >= activeRange.start && x.age <= activeRange.end);
+}, [activeRange, sajuResult.yearlySeun]);
 
   // ✅ 대운 리스트 (항상 훅은 리턴보다 먼저)
   const myDaewoon = useMemo(() => {
@@ -571,38 +590,82 @@ const scoreResult = calculateScore(scoreInput);
   )}
 </p>
 
-{/* 그리드 카드형 대운 */}
-<div className="mt-3 flex flex-wrap justify-center items-stretch gap-1.5">
-  {myDaewoon.map((item) => {
-   // ✅ daewoonUtils.getDaewoonList가 돌려준 대운 간지 사용
-   const gan = (item.pillarGan ?? item.pillar?.[0]) as GanKey;
-   const ji  = (item.pillarJi  ?? item.pillar?.[1]) as JiKey;
-   const elGan = getElement(gan) as ElementType;
-   const elJi  = getElement(ji)  as ElementType;
+{/* 대운 가로 스크롤 카드 – 최종 정리 */}
+<div className="relative">
+  {/* 좌/우 페이드 */}
+  <div className="pointer-events-none absolute left-0 top-0 h-full w-6 bg-gradient-to-r from-white/60 to-transparent rounded-l-xl" />
+  <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-white/60 to-transparent rounded-r-xl" />
 
-    const currAge = getCurrentAge(birthYear!, birthMonth!, birthDay!);
-    const isActive = currAge >= item.age && currAge < item.age + 10;
+  {(() => {
+    // 한 번만 계산
+    const currentAge = getCurrentAge(birthYear!, birthMonth!, birthDay!);
 
     return (
-      <div
-        key={item.age}
-        className={[
-          "w-[72px] sm:w-[52px] rounded-lg  bg-white/70 p-1.5 border shadow-sm",
-          "leading-tight", // 세로 밀도 ↑
-          isActive ? "ring-2 ring-rose-500 border-transparent" : "border-slate-200",
-        ].join(" ")}
-      >
-        <div className="text-center text-[12px] font-semibold text-slate-900">{item.age}세</div>
-        <div className="text-center text-[11px] text-slate-500">{item.year}년</div>
+      <div className="flex gap-2 overflow-x-auto py-2 px-1 scrollbar-hide snap-x snap-mandatory">
+        {myDaewoon.map((item) => {
+          const gan = (item.pillarGan ?? item.pillar?.[0]) as GanKey;
+          const ji  = (item.pillarJi  ?? item.pillar?.[1]) as JiKey;
+          const elGan = getElement(gan) as ElementType;
+          const elJi  = getElement(ji)  as ElementType;
 
-        {/* 임 / 오 → 세로 배치 */}
-        <div className="mt-1 flex flex-col gap-1">
-          <span className={`text-center px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elGan]}`}>{gan}</span>
-          <span className={`text-center px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elJi]}`}>{ji}</span>
-        </div>
+          const isNow = currentAge >= item.age && currentAge < item.age + 10;
+          // 🔴 옵션 B: activeRange를 진짜 사용
+          const isSelected = activeRange ? item.age === activeRange.start : false;
+
+          const cls = `snap-start shrink-0 w-[88px] md:w-[96px] rounded-xl
+            bg-white/80 p-2 border shadow-sm text-center transition-all
+            ${isSelected ? "ring-2 ring-rose-500 border-transparent scale-[1.02]"
+                         : isNow     ? "ring-2 ring-indigo-400 border-transparent"
+                                     : "border-slate-200 hover:border-slate-300"}`;
+
+          return (
+            <button
+              key={item.age}
+              type="button"
+              className={cls}
+              // 카드 클릭 → activeRange와 activeAge 모두 갱신
+              onClick={() => {
+                setActiveRange({ start: item.age, end: item.age + 9 });
+                setActiveAge(item.age);
+              }}
+              aria-pressed={isSelected}
+              title={`${item.age}~${item.age + 9}세 대운`}
+            >
+
+              <div className="text-[12px] font-semibold text-slate-900">
+                {item.age}세
+              </div>
+              <div className="text-[11px] text-slate-500">{item.year}년</div>
+
+              <div className="mt-1 grid grid-cols-1 gap-1">
+                <span className={`px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elGan]}`}>{gan}</span>
+                <span className={`px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elJi]}`}>{ji}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
     );
-  })}
+  })()}
+</div>
+
+{/* 연도별 세운 캐러셀 (대운과 연동) */}
+<div className="mt-3">
+  <YearlySeunCarousel
+  data={yearlySeunForView}
+  activeAge={activeAge}
+  daewoonStartAge={startAge}
+  onSelect={(age) => {
+    setActiveAge(age);
+    setActiveRange(getDaewoonBucket(startAge, age));
+  }}
+  // 👇 추가
+  showTenGod
+  tenGodOfGan={tenGodOfGan}
+  tenGodOfJi={tenGodOfJi}
+  size="xs"
+  verticalPill
+/>
 </div>
 
       <hr className="my-4 border-t border-gray-300" />
@@ -620,8 +683,8 @@ const scoreResult = calculateScore(scoreInput);
 <div className="grid grid-cols-4 gap-3 mt-4">
   {/* 시주 */}
   <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
-    <p className="font-bold text-slate-800">시주<br/>(미래·지향점)</p>
-    <span className="inline-block bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded mt-2">
+    <p className="text-sm font-semibold text-slate-800">시주<br/>(미래·지향점)</p>
+    <span className="inline-block bg-emerald-100 text-emerald-700 text-xs font-semibold px-1.5 py-0.5 rounded mt-2">
       {sajuResult.twelveFortunes.hour}
     </span>
     <p className="text-xs text-gray-700 mt-2">
@@ -631,8 +694,8 @@ const scoreResult = calculateScore(scoreInput);
 
   {/* 일주 */}
   <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
-    <p className="font-bold text-slate-800">일주<br/>(나 자신·전환점)</p>
-    <span className="inline-block bg-sky-100 text-sky-700 font-bold px-2 py-0.5 rounded mt-2">
+    <p className="text-sm font-semibold text-slate-800">일주<br/>(나 자신·전환점)</p>
+    <span className="inline-block bg-sky-100 text-sky-700 text-xs font-semibold px-1.5 py-0.5 rounded mt-2">
       {sajuResult.twelveFortunes.day}
     </span>
     <p className="text-xs text-gray-700 mt-2">
@@ -642,8 +705,8 @@ const scoreResult = calculateScore(scoreInput);
 
   {/* 월주 */}
   <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
-    <p className="font-bold text-slate-800">월주<br/>(사회성·직업)</p>
-    <span className="inline-block bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded mt-2">
+    <p className="text-sm font-semibold text-slate-800">월주<br/>(사회성·직업)</p>
+    <span className="inline-block bg-amber-100 text-amber-700 text-xs font-semibold px-1.5 py-0.5 rounded mt-2">
       {sajuResult.twelveFortunes.month}
     </span>
     <p className="text-xs text-gray-700 mt-2">
@@ -653,8 +716,8 @@ const scoreResult = calculateScore(scoreInput);
 
   {/* 년주 */}
   <div className="p-3 border rounded-lg bg-white/70 shadow-sm text-center">
-    <p className="font-bold text-slate-800">년주<br/>(과거·뿌리)</p>
-    <span className="inline-block bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded mt-2">
+    <p className="text-sm font-semibold text-slate-800">년주<br/>(과거·뿌리)</p>
+    <span className="inline-block bg-rose-100 text-rose-700 text-xs font-semibold px-1.5 py-0.5 rounded mt-2">
       {sajuResult.twelveFortunes.year}
     </span>
     <p className="text-xs text-gray-700 mt-2">
@@ -662,6 +725,7 @@ const scoreResult = calculateScore(scoreInput);
     </p>
   </div>
 </div>
+
       <hr className="my-4 border-t border-gray-300" />
 
 

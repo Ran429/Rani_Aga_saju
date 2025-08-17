@@ -254,3 +254,34 @@ export const getCurrentYearGanji = (year: number): `${GanKey}${JiKey}` => {
   const { sky, ground } = calculateYearPillar(year, 7, 15);
   return `${sky}${ground}` as `${GanKey}${JiKey}`;
 };
+// ─────────────────────────────────────────────
+// 연도별 세운 (0~100세 기본): 출생연도+나이 → 년주(간지)
+// ─────────────────────────────────────────────
+export type YearSeunItem = {
+  age: number;                 // 0~100
+  year: number;                // 양력 연도
+  pillar: `${GanKey}${JiKey}`; // 년간지 (예: "을사")
+};
+
+export function buildYearlySeun(
+  birthYear: number,
+  years = 101 // 0~100세
+): YearSeunItem[] {
+  const list: YearSeunItem[] = [];
+  for (let age = 0; age < years; age++) {
+    const y = birthYear + age;
+    const yg = getYearGanji(y);               // 이미 있는 함수: 입춘 보정 포함
+    list.push({ age, year: y, pillar: yg.ganji as `${GanKey}${JiKey}` });
+  }
+  return list;
+}
+
+// 어디든 utils로
+export const getDaewoonBucket = (startAge: number, age: number) => {
+  if (age < startAge) return { start: 0, end: startAge - 1 }; // 미대운
+  const offset = age - startAge;
+  const bucketIndex = Math.floor(offset / 10);
+  const start = startAge + bucketIndex * 10;
+  const end   = start + 9;
+  return { start, end };
+};

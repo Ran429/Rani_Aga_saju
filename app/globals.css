@@ -22,3 +22,12 @@ body {
   background: var(--background);
   font-family: "Pretendard", Arial, Helvetica, sans-serif;
 }
+
+/* app/globals.css (또는 전역 CSS) */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;            /* Chrome/Safari */
+}

@@ -18,7 +18,7 @@ import { calculateDaewoonPeriod, getDaewoonList } from "../utils/daewoonUtils";
 import { calculateTwelveFortunes } from "../utils/fortuneUtils";
 import { checkSpecialGodsAll } from "../utils/specialGodsUtils";
 import { checkGoodGodsAll } from "../utils/goodGodsUtils";
-
+import { buildYearlySeun } from "../utils/dateUtils";
 import { FourPillars } from "../types/sajuTypes";
 
 // 점수 관련 추가
@@ -127,6 +127,7 @@ export const getSaju = (
 
   const daewoonPeriod = calculateDaewoonPeriod(year, month, day, gender);
   const daewoonList = getDaewoonList(year, month, day, gender);
+  const yearlySeun = buildYearlySeun(year, 101);
 
   const twelveFortunes = {
     year: calculateTwelveFortunes(dayPillar.sky, yearPillar.ground),
@@ -166,7 +167,8 @@ export const getSaju = (
     goodGods,
     twelveFortunes,
     daewoonList,
-    daewoonPeriod
+    daewoonPeriod,
+    yearlySeun,
   }, name);
   const scoreResult = calculate_score_with_limits(scoreInput);
 
@@ -183,6 +185,7 @@ export const getSaju = (
     twelveFortunes,
     specialGods,
     goodGods,
+    yearlySeun,
     score: scoreResult // ← 점수도 같이 반환
   };
 };
