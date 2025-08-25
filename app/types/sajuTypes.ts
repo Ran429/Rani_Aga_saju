@@ -7,6 +7,8 @@
  */
 // C:\Users\zeroj\saju\Rani_Aga_saju\app\types\sajuTypes.ts
 import { GanKey, JiKey } from "../utils/elementUtils";
+import type { YearSeunItem } from "../utils/dateUtils";
+
 
 /* ──────────────────────────────────────────────────────────
  * 기본 기둥/사주 타입
@@ -111,6 +113,7 @@ export interface SajuResultType {
   hour: { sky: string; ground: string; tenGodSky: string; tenGodGround: string };
   occurredUnions: string[];    // 합 발생 리스트
   occurredConflicts: string[]; // 충 발생 리스트
+  yearlySeun: YearSeunItem[];
   userInfo?: {
     name: string;
     birthType: string;

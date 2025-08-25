@@ -1,10 +1,3 @@
-/**
- * 📄 app/utils/dateUtils.ts
- * 역할: 공통 유틸 함수 모음
- * exports: calculateMonthPillar, getYearGanjiFromDate, getDaewoonStartAge, getCurrentYearGanji, calculateHourPillar, getYearGanji, JiKey, Gender, GanKey, calculateDayPillar, getDaewoonTimeline, DaewoonItem, calculateYearPillar
- * imports: ../constants/elements, ../constants/solarTerms
- * referenced by: app/utils/elementUtils.ts, app/utils/daewoonUtils.ts, app/calculators/sajuCalculator.ts
- */
 // C:\Users\zeroj\saju\Rani_Aga_saju\app\utils\dateUtils.ts
 import { tenKan, twelveJi } from "../constants/elements";
 import { solarTerms } from "../constants/solarTerms";
@@ -17,6 +10,17 @@ type SolarTerm = { month: number; day: number; name?: string };
  *  ──────────────────────────── */
 export type GanKey = (typeof tenKan)[number];   // '갑' | '을' | ...
 export type JiKey  = (typeof twelveJi)[number]; // '자' | '축' | ...
+export type Gender = "남성" | "여성";
+export type DaewoonItem = {
+  age: number;
+  year: number;
+  pillar: `${GanKey}${JiKey}`;
+};
+
+export const getCurrentYearGanji = (year: number): `${GanKey}${JiKey}` => {
+  const { sky, ground } = calculateYearPillar(year, 7, 15);
+  return `${sky}${ground}` as `${GanKey}${JiKey}`;
+};
 
 type Pillar = { sky: GanKey; ground: JiKey };
 
@@ -70,7 +74,7 @@ export const calculateMonthPillar = (
     // 3) 해당 절기년의 12절기 시작일(월지 경계) 생성
   //    - solarTerms는 각 월의 시작 절기(입춘, 경칩, 청명, ..., 소한)를 12개 담고 있다고 가정
   //    - 1월 항목은 다음 해로 넘어가므로 solarYear+1로 생성 (getDaewoonStartAge와 동일 규칙)
-  const monthStarts = (solarTerms as { month: number; day: number; name?: string }[]).map(t => {
+  const monthStarts = (solarTerms as SolarTerm[]).map(t => {
     const y = t.month === 1 ? solarYear + 1 : solarYear;
     return new Date(y, t.month - 1, t.day);
   });
@@ -183,105 +187,67 @@ export function getYearGanjiFromDate(date: Date) {
   return getYearGanji(date.getFullYear(), date.getMonth() + 1, date.getDate());
 }
 
-/** ─────────────────────────────
- *  대운 관련 (원본 daewoonUtils 로직과 동일)
- *  ──────────────────────────── */
-export type Gender = "남성" | "여성";
-
-export type DaewoonItem = {
-  age: number;                 // 시작 나이 (예: 7, 17, 27 …)
-  year: number;                // 시작 양력 연도
-  pillar: `${GanKey}${JiKey}`; // 대운 간지(여기서는 "연간지"로 표기)
+export type MonthSeunItem = {
+  year: number;
+  month: number; // 1~12
+  gan: GanKey;
+  ji: JiKey;
 };
 
-/** "남성/여성/남/여" → "남" | "여" 로 정규화 */
-const normalizeGenderShort = (g?: string | Gender): "남" | "여" =>
-  g === "여" || g === "여성" ? "여" : "남";
+/** 12개월 월운 생성 */
+export function getMonthlySeun(year: number): MonthSeunItem[] {
+  const result: MonthSeunItem[] = [];
 
-/** ✅ 대운 시작 나이 (= daewoonUtils.calculateDaewoonPeriod) */
-export function getDaewoonStartAge(
-  birthYear: number,
-  birthMonth: number,
-  birthDay: number,
-  gender: string | Gender
-): number {
-  const birthDate = new Date(birthYear, birthMonth - 1, birthDay);
+  // 절기 리스트 순회 (입춘~소한, 총 12개)
+  (solarTerms as SolarTerm[]).forEach((term, idx) => {
+    const y = term.month === 1 ? year + 1 : year;
+    const { sky, ground } = calculateMonthPillar(y, term.month, term.day);
 
-  // 절기 테이블(1월 항목은 다음 해로 보정)
-  const termsThisYear = (solarTerms as SolarTerm[]).map((term: SolarTerm) => {
-    let y = birthYear;
-    if (term.month === 1) y += 1;
-    return new Date(y, term.month - 1, term.day);
+    result.push({
+      year,
+      month: idx + 1,  // 1=寅월 … 12=丑월
+      gan: sky,
+      ji: ground,
+    });
   });
 
-  // 출생일 이후 첫 절기
-  let nextTerm = termsThisYear.find((d: Date) => d.getTime() > birthDate.getTime());
-  // 못 찾으면 익년 입춘(2/4)로 안전 Fallback
-  if (!nextTerm) nextTerm = new Date(birthYear + 1, 1, 4);
-
-  const diffDays = Math.ceil((nextTerm.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24));
-  const yearsToStart = Math.round(diffDays / 3); // 3일 = 1년 환산
-
-  // ⚠️ 원본 규칙: 출생 연도 홀수면 양년
-  const isYangYear = birthYear % 2 !== 0;
-  const g = normalizeGenderShort(gender);
-  const forward = (isYangYear && g === "남") || (!isYangYear && g === "여");
-
-  return forward ? yearsToStart : 10 - yearsToStart;
+  return result;
 }
 
-/** ✅ 대운 타임라인 (= daewoonUtils.getDaewoonList) */
-export function getDaewoonTimeline(
-  birthYear: number,
-  birthMonth: number,
-  birthDay: number,
-  gender: string | Gender
-): DaewoonItem[] {
-  const startAge = getDaewoonStartAge(birthYear, birthMonth, birthDay, gender);
-  const items: DaewoonItem[] = [];
 
-  for (let i = 0; i < 10; i++) {
-    const age = startAge + i * 10;
-    const year = birthYear + age;
-    const yg = getYearGanji(year);
-    items.push({ age, year, pillar: yg.ganji });
-  }
-  return items;
-}
 
-/** 현재연도 간지(연산 통일: calculateYearPillar 재사용) */
-export const getCurrentYearGanji = (year: number): `${GanKey}${JiKey}` => {
-  const { sky, ground } = calculateYearPillar(year, 7, 15);
-  return `${sky}${ground}` as `${GanKey}${JiKey}`;
-};
-// ─────────────────────────────────────────────
-// 연도별 세운 (0~100세 기본): 출생연도+나이 → 년주(간지)
-// ─────────────────────────────────────────────
+// 연운 타입
 export type YearSeunItem = {
-  age: number;                 // 0~100
-  year: number;                // 양력 연도
-  pillar: `${GanKey}${JiKey}`; // 년간지 (예: "을사")
+  age: number;
+  year: number;
+  pillar?: string | [GanKey, JiKey];
+  sky?: GanKey;
+  ground?: JiKey;
 };
 
-export function buildYearlySeun(
-  birthYear: number,
-  years = 101 // 0~100세
-): YearSeunItem[] {
-  const list: YearSeunItem[] = [];
-  for (let age = 0; age < years; age++) {
-    const y = birthYear + age;
-    const yg = getYearGanji(y);               // 이미 있는 함수: 입춘 보정 포함
-    list.push({ age, year: y, pillar: yg.ganji as `${GanKey}${JiKey}` });
-  }
-  return list;
-}
-
-// 어디든 utils로
-export const getDaewoonBucket = (startAge: number, age: number) => {
-  if (age < startAge) return { start: 0, end: startAge - 1 }; // 미대운
+// 나이 → 대운 범위(시작, 끝) 계산
+export function getDaewoonBucket(startAge: number, age: number) {
+  if (age < startAge) return { start: 0, end: startAge - 1 }; // 아직 대운 시작 전
   const offset = age - startAge;
   const bucketIndex = Math.floor(offset / 10);
   const start = startAge + bucketIndex * 10;
-  const end   = start + 9;
+  const end = start + 9;
   return { start, end };
-};
+}
+
+// 연운(年運) 리스트 생성
+export function buildYearlySeun(startYear: number, endAge: number): YearSeunItem[] {
+  const result: YearSeunItem[] = [];
+  for (let age = 1; age <= endAge; age++) {
+    const year = startYear + (age - 1);
+    const { sky, ground } = calculateYearPillar(year, 7, 15); // 기준일: 7월 15일 (입춘 보정)
+    result.push({
+      age,
+      year,
+      sky,
+      ground,
+      pillar: `${sky}${ground}` as `${GanKey}${JiKey}`,
+    });
+  }
+  return result;
+}

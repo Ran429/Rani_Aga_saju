@@ -8,7 +8,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 
 import Image from "next/image";
-import { getElement, GanKey, JiKey, getTenGod, getHiddenStems } from "@/app/utils/elementUtils";
+import { getElement, GanKey, JiKey} from "@/app/utils/elementUtils";
 import { calculateElementDistribution } from "@/app/calculators/elementDistribution";
 
 import { getDaewoonList } from "@/app/utils/daewoonUtils";
@@ -17,8 +17,7 @@ import { splitBirthDate, normalizeGender, type Gender } from "@/app/types/sajuTy
 import { buildScoreInput } from "@/app/calculators/scoreInputBuilder";
 import { calculate_score_with_limits as calculateScore } from "@/app/calculators/scoreCalculator";
 import { twelveFortunesDescriptions } from "@/app/utils/fortuneUtils";
-import YearlySeunCarousel from "@/app/components/YearlySeun/YearlySeunCarousel";
-import { getDaewoonBucket } from "@/app/utils/dateUtils";
+import DaewoonYearMonthPanel from "@/app/components/fortunes/DaewoonYearMonthPanel";
 
 
 /** 내부 전용 타입 */
@@ -34,14 +33,6 @@ const DONUT_COLORS: Record<ElementType, { stroke: string; bg: string }> = {
   토: { stroke: "text-amber-500", bg: "bg-amber-500" },
   금: { stroke: "text-slate-500", bg: "bg-slate-500" },
   수: { stroke: "text-sky-500", bg: "bg-sky-500" },
-};
-
-const PILL_STYLES: Record<ElementType, string> = {
-  목: "bg-emerald-50 text-emerald-700 border border-emerald-300",
-  화: "bg-rose-50 text-rose-700 border border-rose-300",
-  토: "bg-amber-50 text-amber-800 border border-amber-300",
-  금: "bg-slate-50 text-slate-700 border border-slate-300",
-  수: "bg-sky-50 text-sky-700 border border-sky-300",
 };
 
 /** 도넛 차트 (순수 SVG) */
@@ -300,17 +291,7 @@ export default function BasicStructure({ userName, sajuResult,}: BasicStructureP
   const daySky = sajuResult.day.sky as GanKey;
   const dayGround = sajuResult.day.ground;
   const dayElement = getElement(daySky) as ElementType;
-  const tenGodOfGan = React.useCallback((gan: GanKey) => {
-    return getTenGod(daySky, gan);
-  }, [daySky]);
-
-    const tenGodOfJi = React.useCallback((ji: JiKey) => {
-    const [main] = getHiddenStems(ji);      // 지장의 주기준
-    return main ? getTenGod(daySky, main) : "";
-  }, [daySky]);
   const animalData = getAnimalAndColor(dayElement, dayGround);
-
-
   // ✅ birthDate 문자열 → 연/월/일 안전 파싱 (birthYear/Month/Day가 없을 때 대비)
   const { year: birthYear, month: birthMonth, day: birthDay } = splitBirthDate(sajuResult.userInfo);
   const gender: Gender = normalizeGender(sajuResult.userInfo?.gender);
@@ -320,32 +301,11 @@ export default function BasicStructure({ userName, sajuResult,}: BasicStructureP
  const [applyPalace, setApplyPalace] = useState(true);
  const [applyUnions, setApplyUnions] = useState(true);
 
- // 대운-세운 연동 상태
-const [activeAge, setActiveAge] = useState<number | undefined>(undefined); // 선택된 나이
-const [activeRange, setActiveRange] = useState<{start:number; end:number} | null>(null);
-
-const yearlySeunForView = useMemo(() => {
-  const all = sajuResult.yearlySeun;
-  if (!activeRange) return all; // 선택 전에는 전체
-  return all.filter(x => x.age >= activeRange.start && x.age <= activeRange.end);
-}, [activeRange, sajuResult.yearlySeun]);
-
   // ✅ 대운 리스트 (항상 훅은 리턴보다 먼저)
   const myDaewoon = useMemo(() => {
   if (!birthYear || !birthMonth || !birthDay) return [];
   return getDaewoonList(birthYear, birthMonth, birthDay, gender);
 }, [birthYear, birthMonth, birthDay, gender]);
-
-// 오늘 기준 만 나이 계산
-function getCurrentAge(y: number, m: number, d: number) {
-  const today = new Date();
-  let age = today.getFullYear() - y;
-  const hasNotHadBirthday =
-    today.getMonth() + 1 < m ||
-    (today.getMonth() + 1 === m && today.getDate() < d);
-  if (hasNotHadBirthday) age -= 1;
-  return age;
-}
 
   // 2) 그 다음 렌더 분기
   const isDataReady =
@@ -410,6 +370,8 @@ const isMale  = gender === "남성";
 const forwardTxt = (isYangYearStem && isMale) || (!isYangYearStem && !isMale) ? "순행" : "역행";
 const scoreInput = buildScoreInput(sajuResult, "테스트");
 const scoreResult = calculateScore(scoreInput);
+
+
 
   return (
     <section>
@@ -570,104 +532,43 @@ const scoreResult = calculateScore(scoreInput);
 
       <hr className="my-4 border-t border-gray-300" />
 
- {/* 📌 3. 대운 */}
- <h2 className="text-lg font-bold mb-3">3. 내 사주의 대운과 십이운성</h2>
+{/* 📌 3. 대운 */}
+<h2 className="text-lg font-bold mb-3">3. 내 사주의 대운과 십이운성</h2>
 
-      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 3-1. 나의 대운</h3>
-     <p className="text-sm text-left text-gray-700 leading-relaxed">
+<h3 className="text-sm font-bold text-gray-700 mt-6">📌 3-1. 나의 대운</h3>
+<p className="text-sm text-left text-gray-700 leading-relaxed">
   &ldquo;대운&rdquo;이란, <b>10년마다 바뀌는 큰 흐름의 운세</b>예요.  
-  쉽게 말해, 인생의 긴 계절 같은 거죠 🍂🌸☀️❄️  <br />
-  어떤 시기에는 불 같은 열정이 강조되고, 또 어떤 시기에는 물처럼 차분한 기운이 흐르기도 해요.  
+  쉽게 말해, 인생의 긴 계절 같은 거죠 🍂🌸☀️❄️  
+  <br />
+  어떤 시기에는 불 같은 열정이 강조되고,  
+  또 어떤 시기에는 물처럼 차분한 기운이 흐르기도 해요.  
   <br />
   <br />
   {myDaewoon.length ? (
     <>
-      {userName}님은 <b>{startAge}세</b>부터 대운이 시작되며, 
-      현재 흐름은 <span className="text-slate-500">{forwardTxt}</span> 방향으로 흘러가고 있어요.
+      {userName}님은 <b>{startAge}세</b>부터 대운이 시작되며,  
+      현재 흐름은 <span className="text-slate-500">{forwardTxt}</span> 방향으로 흘러가고 있어요. <br />
+      직접 클릭해 보면서 각 대운의 시작 나이와 기운을 확인해 보세요!
     </>
   ) : (
     `${userName}님의 대운 시작 정보를 계산하지 못했습니다.`
   )}
 </p>
 
-{/* 대운 가로 스크롤 카드 – 최종 정리 */}
-<div className="relative">
-  {/* 좌/우 페이드 */}
-  <div className="pointer-events-none absolute left-0 top-0 h-full w-6 bg-gradient-to-r from-white/60 to-transparent rounded-l-xl" />
-  <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-white/60 to-transparent rounded-r-xl" />
-
-  {(() => {
-    // 한 번만 계산
-    const currentAge = getCurrentAge(birthYear!, birthMonth!, birthDay!);
-
-    return (
-      <div className="flex gap-2 overflow-x-auto py-2 px-1 scrollbar-hide snap-x snap-mandatory">
-        {myDaewoon.map((item) => {
-          const gan = (item.pillarGan ?? item.pillar?.[0]) as GanKey;
-          const ji  = (item.pillarJi  ?? item.pillar?.[1]) as JiKey;
-          const elGan = getElement(gan) as ElementType;
-          const elJi  = getElement(ji)  as ElementType;
-
-          const isNow = currentAge >= item.age && currentAge < item.age + 10;
-          // 🔴 옵션 B: activeRange를 진짜 사용
-          const isSelected = activeRange ? item.age === activeRange.start : false;
-
-          const cls = `snap-start shrink-0 w-[88px] md:w-[96px] rounded-xl
-            bg-white/80 p-2 border shadow-sm text-center transition-all
-            ${isSelected ? "ring-2 ring-rose-500 border-transparent scale-[1.02]"
-                         : isNow     ? "ring-2 ring-indigo-400 border-transparent"
-                                     : "border-slate-200 hover:border-slate-300"}`;
-
-          return (
-            <button
-              key={item.age}
-              type="button"
-              className={cls}
-              // 카드 클릭 → activeRange와 activeAge 모두 갱신
-              onClick={() => {
-                setActiveRange({ start: item.age, end: item.age + 9 });
-                setActiveAge(item.age);
-              }}
-              aria-pressed={isSelected}
-              title={`${item.age}~${item.age + 9}세 대운`}
-            >
-
-              <div className="text-[12px] font-semibold text-slate-900">
-                {item.age}세
-              </div>
-              <div className="text-[11px] text-slate-500">{item.year}년</div>
-
-              <div className="mt-1 grid grid-cols-1 gap-1">
-                <span className={`px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elGan]}`}>{gan}</span>
-                <span className={`px-1 py-0.5 rounded-md text-[13px] ${PILL_STYLES[elJi]}`}>{ji}</span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-    );
-  })()}
+{/* 대운 + 연운 + 월운 패널 */}
+<div className="mt-4">
+  <DaewoonYearMonthPanel
+    daewoon={myDaewoon}
+    yearlySeun={sajuResult.yearlySeun}
+    startAge={startAge}
+    birth={{ year: birthYear!, month: birthMonth!, day: birthDay! }}
+    daySky={daySky}
+    size="xs"
+    verticalPill
+    showRangeText
+    showArrows
+  />
 </div>
-
-{/* 연도별 세운 캐러셀 (대운과 연동) */}
-<div className="mt-3">
-  <YearlySeunCarousel
-  data={yearlySeunForView}
-  activeAge={activeAge}
-  daewoonStartAge={startAge}
-  onSelect={(age) => {
-    setActiveAge(age);
-    setActiveRange(getDaewoonBucket(startAge, age));
-  }}
-  // 👇 추가
-  showTenGod
-  tenGodOfGan={tenGodOfGan}
-  tenGodOfJi={tenGodOfJi}
-  size="xs"
-  verticalPill
-/>
-</div>
-
       <hr className="my-4 border-t border-gray-300" />
 
 
