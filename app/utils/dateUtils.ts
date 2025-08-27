@@ -198,18 +198,17 @@ export type MonthSeunItem = {
 export function getMonthlySeun(year: number): MonthSeunItem[] {
   const result: MonthSeunItem[] = [];
 
-  // 절기 리스트 순회 (입춘~소한, 총 12개)
-  (solarTerms as SolarTerm[]).forEach((term, idx) => {
-    const y = term.month === 1 ? year + 1 : year;
-    const { sky, ground } = calculateMonthPillar(y, term.month, term.day);
+  (solarTerms as SolarTerm[]).forEach((term) => {
+  const y = term.month === 1 ? year + 1 : year;
+  const { sky, ground } = calculateMonthPillar(y, term.month, term.day);
 
-    result.push({
-      year,
-      month: idx + 1,  // 1=寅월 … 12=丑월
-      gan: sky,
-      ji: ground,
-    });
+  result.push({
+    year,
+    month: term.month,
+    gan: sky,
+    ji: ground,
   });
+});
 
   return result;
 }

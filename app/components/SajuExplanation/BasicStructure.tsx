@@ -6,186 +6,78 @@
  */
 // app/components/SajuExplanation/BasicStructure.tsx
 import React, { useMemo, useState, useEffect } from "react";
-
 import Image from "next/image";
-import { getElement, GanKey, JiKey} from "@/app/utils/elementUtils";
+import { getElement, GanKey, JiKey } from "@/app/utils/elementUtils";
 import { calculateElementDistribution } from "@/app/calculators/elementDistribution";
-
 import { getDaewoonList } from "@/app/utils/daewoonUtils";
-import type { BasicStructureProps } from "@/app/types/sajuTypes"; // 이미 있다면 유지
+import type { BasicStructureProps } from "@/app/types/sajuTypes";
 import { splitBirthDate, normalizeGender, type Gender } from "@/app/types/sajuTypes";
 import { buildScoreInput } from "@/app/calculators/scoreInputBuilder";
 import { calculate_score_with_limits as calculateScore } from "@/app/calculators/scoreCalculator";
 import { twelveFortunesDescriptions } from "@/app/utils/fortuneUtils";
 import DaewoonYearMonthPanel from "@/app/components/fortunes/DaewoonYearMonthPanel";
+import ElementDistributionPanel from "./ElementDistributionPanel";
 
 
-/** 내부 전용 타입 */
+// ---------------- 타입/상수 ----------------
 type ElementType = "목" | "화" | "토" | "금" | "수";
 
-/** 표시 순서 */
-const ELEMENT_ORDER: ElementType[] = ["목", "화", "토", "금", "수"];
-
-/** 색 (SVG stroke용 + 레전드 BG용) */
-const DONUT_COLORS: Record<ElementType, { stroke: string; bg: string }> = {
-  목: { stroke: "text-emerald-500", bg: "bg-emerald-500" },
-  화: { stroke: "text-rose-500", bg: "bg-rose-500" },
-  토: { stroke: "text-amber-500", bg: "bg-amber-500" },
-  금: { stroke: "text-slate-500", bg: "bg-slate-500" },
-  수: { stroke: "text-sky-500", bg: "bg-sky-500" },
+const elementColors: Record<ElementType, string> = {
+  목: "bg-white border-green-400",
+  화: "bg-white border-red-400",
+  토: "bg-white border-yellow-400",
+  금: "bg-white border-gray-400",
+  수: "bg-white border-blue-400",
 };
 
-/** 도넛 차트 (순수 SVG) */
-function DonutChart({
-  data,
-  title,
-  size = 115,
-  strokeWidth = 18,
-  titleClassName,
-}: {
-  data: Record<ElementType, number>;
-  title: string;
-  size?: number;
-  strokeWidth?: number;
-  titleClassName?: string;
-}) {
-  const values = ELEMENT_ORDER.map((el) => data[el] ?? 0);
-  const total = values.reduce((a, b) => a + b, 0);
+const skyDescriptions: Record<GanKey, string> = {
+  갑: "큰 나무처럼 곧고 당당하며, 스스로 뿌리를 깊게 내리는 성향입니다.",
+  을: "작은 덩굴과 화초처럼 상황에 유연하게 잘 맞추며, 부드러운 힘을 발휘합니다.",
+  병: "태양처럼 따뜻하고 밝은 기운을 뿜어내며, 사람들에게 희망을 줍니다.",
+  정: "촛불과 같은 은은한 불빛처럼 세심하고 섬세한 매력을 지닙니다.",
+  무: "높은 산처럼 듬직하고 묵직하며, 안정적인 기운을 갖고 있습니다.",
+  기: "논밭의 흙처럼 포근하고 다정하며, 주변을 보살피는 성향입니다.",
+  경: "단단한 금속처럼 결단력 있고 추진력이 뛰어납니다.",
+  신: "보석처럼 세련되고 반짝이며, 세밀한 부분에 강점을 지닙니다.",
+  임: "넓은 바다처럼 포용력이 크고, 변화를 수용하는 힘이 있습니다.",
+  계: "맑은 시냇물처럼 부드럽고, 상황에 맞게 흐르는 유연함을 가집니다.",
+};
 
-  const top = ELEMENT_ORDER
-    .map((el) => ({ el, val: data[el] ?? 0 }))
-    .reduce(
-      (p, c) => (c.val > p.val ? c : p),
-      { el: ELEMENT_ORDER[0], val: data[ELEMENT_ORDER[0]] ?? 0 }
-    );
+const getAnimalAndColor = (dayElement: ElementType, dayGround: string) => {
+  const animals: Record<string, string> = {
+    자: "쥐", 축: "소", 인: "호랑이", 묘: "토끼", 진: "용", 사: "뱀",
+    오: "말", 미: "양", 신: "원숭이", 유: "닭", 술: "개", 해: "돼지",
+  };
+  const imageUrls: Record<string, string> = {
+    쥐: "https://i.imgur.com/NfTjvBa.png",
+    소: "https://i.imgur.com/2fHObII.png",
+    호랑이: "https://i.imgur.com/IRIcKUF.png",
+    토끼: "https://i.imgur.com/Wm7lhe5.png",
+    용: "https://i.imgur.com/llBGs3f.png",
+    뱀: "https://i.imgur.com/RFM4Je5.png",
+    말: "https://i.imgur.com/PmdwrW2.png",
+    양: "https://i.imgur.com/n5tWHdW.png",
+    원숭이: "https://i.imgur.com/wiRHpFx.png",
+    닭: "https://i.imgur.com/IakoWOf.png",
+    개: "https://i.imgur.com/O71tkpw.png",
+    돼지: "https://i.imgur.com/oaT9OTj.png",
+  };
+  const colorPrefix: Record<ElementType, string> = {
+    목: "푸른 ", 화: "붉은 ", 토: "노란 ", 금: "흰 ", 수: "검은 ",
+  };
+  const animal = animals[dayGround] ?? "미확인 동물";
+  const imageUrl = imageUrls[animal] ?? "";
+  return { animal: `${colorPrefix[dayElement]}${animal}`, imageUrl };
+};
 
-  const r = size / 2 - strokeWidth / 2;
-  const c = 2 * Math.PI * r;
-  const startAngle = -Math.PI / 2;
-  const minPctToLabel = 6;
-  const labelRadius = r + strokeWidth / 2 + 8;
-
-  let accRatio = 0;
-  const segments = ELEMENT_ORDER.map((el) => {
-    const v = data[el] ?? 0;
-    const ratio = total > 0 ? v / total : 0;
-    const len = ratio * c;
-    const offset = accRatio * c;
-    const midRatio = accRatio + ratio / 2;
-    const angle = startAngle + 2 * Math.PI * midRatio;
-    accRatio += ratio;
-    return { el, ratio, len, offset, angle };
-  });
-
-  return (
-    <div className="flex flex-col items-center">
-      <svg
-        width={size}
-        height={size}
-        className="block"
-        style={{ overflow: "visible" }}
-        viewBox={`0 0 ${size} ${size}`}
-      >
-        {/* track */}
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          strokeWidth={strokeWidth}
-          className="text-slate-200"
-          stroke="currentColor"
-          fill="none"
-        />
-
-        {/* segments */}
-        {segments.map(({ el, len, offset, ratio }) =>
-          len <= 0 ? null : (
-            <circle
-              key={el}
-              cx={size / 2}
-              cy={size / 2}
-              r={r}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${len} ${c - len}`}
-              strokeDashoffset={-offset}
-              transform={`rotate(-90 ${size / 2} ${size / 2})`}
-              className={DONUT_COLORS[el].stroke}
-              stroke="currentColor"
-              fill="none"
-              strokeLinecap="butt"
-              opacity={ratio < 0.02 ? 0.35 : 1}
-            />
-          )
-        )}
-
-        {/* center label */}
-        <text
-          x="50%"
-          y="50%"
-          textAnchor="middle"
-          dominantBaseline="central"
-          className={`text-xl font-semibold ${DONUT_COLORS[top.el].stroke}`}
-          fill="currentColor"
-        >
-          {total > 0 ? top.el : "—"}
-        </text>
-
-        {/* outer labels */}
-        {segments.map(({ el, ratio, angle }) => {
-          const pct = Math.round(ratio * 100);
-          if (pct < minPctToLabel) return null;
-
-          const cx = size / 2 + labelRadius * Math.cos(angle);
-          const cy = size / 2 + labelRadius * Math.sin(angle);
-          const anchor = Math.cos(angle) >= 0 ? "start" : "end";
-          const dx = Math.cos(angle) >= 0 ? 6 : -6;
-
-          return (
-            <g key={`lbl-${el}`} style={{ pointerEvents: "none" }}>
-              <circle
-                cx={cx}
-                cy={cy}
-                r={3}
-                className={DONUT_COLORS[el].stroke}
-                fill="currentColor"
-              />
-              <text
-                x={cx + dx}
-                y={cy}
-                textAnchor={anchor as "start" | "end"}
-                dominantBaseline="central"
-                className="text-[10px] fill-slate-700"
-              >
-                {el} {pct}%
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-
-      {/* title label */}
-      {title && (
-        <div
-          className={`text-[12px] font-medium text-slate-700 ${
-            titleClassName ?? "mt-2"
-          }`}
-        >
-          {title}
-        </div>
-      )}
-    </div>
-  );
-}
-
+// ---------------- 점수 뱃지 ----------------
 function ScoreBadge({ score, userName }: { score: number; userName: string }) {
   const [displayScore, setDisplayScore] = useState(0);
-
   useEffect(() => {
     let start = 0;
     const duration = 1200;
     const stepTime = 16;
     const step = Math.ceil(score / (duration / stepTime));
-
     const timer = setInterval(() => {
       start += step;
       if (start >= score) {
@@ -194,10 +86,8 @@ function ScoreBadge({ score, userName }: { score: number; userName: string }) {
       }
       setDisplayScore(start);
     }, stepTime);
-
     return () => clearInterval(timer);
   }, [score]);
-
   return (
     <div className="my-8 flex flex-col items-center">
       <h2 className="text-xl font-bold text-gray-800 mb-3">
@@ -213,171 +103,59 @@ function ScoreBadge({ score, userName }: { score: number; userName: string }) {
   );
 }
 
-/** 색상 맵 (ElementType으로 타입 안전) */
-const elementColors: Record<ElementType, string> = {
-  목: "bg-white border-green-400",
-  화: "bg-white border-red-400",
-  토: "bg-white border-yellow-400",
-  금: "bg-white border-gray-400",
-  수: "bg-white border-blue-400",
-};
-
-/** 천간 비유 설명 */
-const skyDescriptions: Record<GanKey, string> = {
-  갑: "큰 나무처럼 곧고 당당하며, 스스로 뿌리를 깊게 내리는 성향입니다.",
-  을: "작은 덩굴과 화초처럼 상황에 유연하게 잘 맞추며, 부드러운 힘을 발휘합니다.",
-  병: "태양처럼 따뜻하고 밝은 기운을 뿜어내며, 사람들에게 희망을 줍니다.",
-  정: "촛불과 같은 은은한 불빛처럼 세심하고 섬세한 매력을 지닙니다.",
-  무: "높은 산처럼 듬직하고 묵직하며, 안정적인 기운을 갖고 있습니다.",
-  기: "논밭의 흙처럼 포근하고 다정하며, 주변을 보살피는 성향입니다.",
-  경: "단단한 금속처럼 결단력 있고 추진력이 뛰어납니다.",
-  신: "보석처럼 세련되고 반짝이며, 세밀한 부분에 강점을 지닙니다.",
-  임: "넓은 바다처럼 포용력이 크고, 변화를 수용하는 힘이 있습니다.",
-  계: "맑은 시냇물처럼 부드럽고, 상황에 맞게 흐르는 유연함을 가집니다.",
-};
-
-/** 동물/이미지 매핑 */
-const getAnimalAndColor = (
-  dayElement: ElementType,
-  dayGround: string
-): { animal: string; imageUrl: string } => {
-  const animals: Record<string, string> = {
-    자: "쥐",
-    축: "소",
-    인: "호랑이",
-    묘: "토끼",
-    진: "용",
-    사: "뱀",
-    오: "말",
-    미: "양",
-    신: "원숭이",
-    유: "닭",
-    술: "개",
-    해: "돼지",
-  };
-
-  const imageUrls: Record<string, string> = {
-    쥐: "https://i.imgur.com/NfTjvBa.png",
-    소: "https://i.imgur.com/2fHObII.png",
-    호랑이: "https://i.imgur.com/IRIcKUF.png",
-    토끼: "https://i.imgur.com/Wm7lhe5.png",
-    용: "https://i.imgur.com/llBGs3f.png",
-    뱀: "https://i.imgur.com/RFM4Je5.png",
-    말: "https://i.imgur.com/PmdwrW2.png",
-    양: "https://i.imgur.com/n5tWHdW.png",
-    원숭이: "https://i.imgur.com/wiRHpFx.png",
-    닭: "https://i.imgur.com/IakoWOf.png",
-    개: "https://i.imgur.com/O71tkpw.png",
-    돼지: "https://i.imgur.com/oaT9OTj.png",
-  };
-
-  const colorPrefix: Record<ElementType, string> = {
-    목: "푸른 ",
-    화: "붉은 ",
-    토: "노란 ",
-    금: "흰 ",
-    수: "검은 ",
-  };
-
-  const animal = animals[dayGround] ?? "미확인 동물";
-  const imageUrl = imageUrls[animal] ?? "";
-
-  return { animal: `${colorPrefix[dayElement]}${animal}`, imageUrl };
-};
-
-
-export default function BasicStructure({ userName, sajuResult,}: BasicStructureProps) {
-  // 1) 먼저 필요한 계산/훅들을 "항상" 호출
+// ---------------- 메인 컴포넌트 ----------------
+export default function BasicStructure({ userName, sajuResult }: BasicStructureProps) {
   const daySky = sajuResult.day.sky as GanKey;
   const dayGround = sajuResult.day.ground;
   const dayElement = getElement(daySky) as ElementType;
   const animalData = getAnimalAndColor(dayElement, dayGround);
-  // ✅ birthDate 문자열 → 연/월/일 안전 파싱 (birthYear/Month/Day가 없을 때 대비)
+
   const { year: birthYear, month: birthMonth, day: birthDay } = splitBirthDate(sajuResult.userInfo);
   const gender: Gender = normalizeGender(sajuResult.userInfo?.gender);
 
-  // ✅ 옵션 토글 (조후 / 궁성가중 / 합·충)
- const [applyChohu, setApplyChohu] = useState(true);
- const [applyPalace, setApplyPalace] = useState(true);
- const [applyUnions, setApplyUnions] = useState(true);
+  const pillars = {
+    year:  { sky: sajuResult.year.sky as GanKey, ground: sajuResult.year.ground as JiKey },
+    month: { sky: sajuResult.month.sky as GanKey, ground: sajuResult.month.ground as JiKey },
+    day:   { sky: sajuResult.day.sky as GanKey, ground: sajuResult.day.ground as JiKey },
+    hour:  { sky: sajuResult.hour.sky as GanKey, ground: sajuResult.hour.ground as JiKey },
+  };
 
-  // ✅ 대운 리스트 (항상 훅은 리턴보다 먼저)
+ const emptyDist: Record<ElementType, number> = {
+  목: 0,
+  화: 0,
+  토: 0,
+  금: 0,
+  수: 0,
+};
+
+const {
+  rawElements = emptyDist,
+  chohuPalaceElements = emptyDist,
+  adjustedElements = emptyDist,
+} = calculateElementDistribution(pillars, { stages: true }) ?? {};
+
   const myDaewoon = useMemo(() => {
-  if (!birthYear || !birthMonth || !birthDay) return [];
-  return getDaewoonList(birthYear, birthMonth, birthDay, gender);
-}, [birthYear, birthMonth, birthDay, gender]);
+    if (!birthYear || !birthMonth || !birthDay) return [];
+    return getDaewoonList(birthYear, birthMonth, birthDay, gender);
+  }, [birthYear, birthMonth, birthDay, gender]);
 
-  // 2) 그 다음 렌더 분기
-  const isDataReady =
-    !!sajuResult?.day && !!sajuResult?.month && !!sajuResult?.year && !!sajuResult?.hour;
-
+  const isDataReady = !!sajuResult?.day && !!sajuResult?.month && !!sajuResult?.year && !!sajuResult?.hour;
   if (!isDataReady) {
-    console.warn("❗ sajuResult 데이터가 준비되지 않았습니다:", sajuResult);
     return <p className="text-sm text-gray-500">사주 데이터 로딩 중...</p>;
   }
 
- // ✅ pillars 한번에
- const pillars = {
-   year:  { sky: sajuResult.year.sky  as GanKey, ground: sajuResult.year.ground  as JiKey },
-   month: { sky: sajuResult.month.sky as GanKey, ground: sajuResult.month.ground as JiKey },
-   day:   { sky: sajuResult.day.sky   as GanKey, ground: sajuResult.day.ground   as JiKey },
-   hour:  { sky: sajuResult.hour.sky  as GanKey, ground: sajuResult.hour.ground  as JiKey },
- };
-
- // ✅ 단계별 결과 받기 (stages: true)
- const {
-   rawElements,              // 원본(무보정)
-   chohuPalaceElements,      // 조후+궁성 반영
-   baseElements,             // ↑와 동일(호환 키)
-   adjustedElements,         // 합·충 반영 후
- } = calculateElementDistribution(pillars, {
-   applyChohu, applyPalace, applyUnions, stages: true,
- });
-
-const rawForChart = (rawElements ?? baseElements) as Record<ElementType, number>;
-const chohuForChart = (chohuPalaceElements ?? baseElements) as Record<ElementType, number>;
-
-function summarizeElements(data: Record<ElementType, number>) {
-  const vals = Object.values(data);
-  const max = Math.max(...vals);
-  const min = Math.min(...vals);
-  const keys = Object.keys(data) as ElementType[];
-  const dominants = keys.filter(k => data[k] === max);
-  const weaks     = keys.filter(k => data[k] === min);
-  return { dominants, weaks };
-}
-
-function formatWithPct(
-  data: Record<ElementType, number>,
-  keys: ElementType[]
-) {
-  const total = Object.values(data).reduce((a,b)=>a+b, 0) || 1;
-  return keys.map(k => `${k} ${Math.round((data[k] / total) * 100)}%`).join(", ");
-}
-
-// 🔎 세 단계 요약
-const { dominants: domRaw,   weaks: weakRaw }   = summarizeElements(rawForChart);
-const { dominants: domCP,    weaks: weakCP }    = summarizeElements(chohuForChart); // CP = Chohu+Palace
-const { dominants: domAdj,   weaks: weakAdj }   = summarizeElements(adjustedElements);
-
-// 대운 안내용 메타
-const startAge = myDaewoon[0]?.age ?? sajuResult.daewoonPeriod;
-
-// 순/역행 텍스트 (연간 음양 + 성별)
-const yangStems: GanKey[] = ["갑","병","무","경","임"];
-const isYangYearStem = yangStems.includes(sajuResult.year.sky as GanKey);
-const isMale  = gender === "남성";
-const forwardTxt = (isYangYearStem && isMale) || (!isYangYearStem && !isMale) ? "순행" : "역행";
-const scoreInput = buildScoreInput(sajuResult, "테스트");
-const scoreResult = calculateScore(scoreInput);
-
-
+  const startAge = myDaewoon[0]?.age ?? sajuResult.daewoonPeriod;
+  const yangStems: GanKey[] = ["갑", "병", "무", "경", "임"];
+  const isYangYearStem = yangStems.includes(sajuResult.year.sky as GanKey);
+  const isMale = gender === "남성";
+  const forwardTxt = (isYangYearStem && isMale) || (!isYangYearStem && !isMale) ? "순행" : "역행";
+  const scoreInput = buildScoreInput(sajuResult, "테스트");
+  const scoreResult = calculateScore(scoreInput);
 
   return (
     <section>
-       {/* 📌 점수 표시 영역 */}
+      {/* 점수 */}
       <ScoreBadge score={scoreResult.total} userName={userName} />
-
       <hr className="my-4 border-t border-gray-300" />
 {/* 📌 1. 사주의 기본 구조 */}
       <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-1. 사주의 기본 구조</h3>
@@ -443,7 +221,7 @@ const scoreResult = calculateScore(scoreInput);
     {userName}님의 일주는 <b>{daySky}{dayGround}일주</b>이고, 이를 동물로 비유하면{" "}
     <b>{animalData.animal}</b>이에요 🐾
     <br /><br />
-    사주는 다섯 가지 기운(오행: 나무·불·흙·금속·물)과 12지 동물이 함께 어우러져서 만들어지는데,
+    사주는 다섯 가지 기운(오행: 나무·불·흙·금속·물)과 12지 동물이 함께 어우러져서 만들어지는데,<br />
     이 조합 덕분에 나만의 &ldquo;캐릭터&rdquo;가 생기는 거예요.
     <br />
     예를 들어 같은 말이라도, 붉은 말 🔥과 흰 말 ⚪️은 성향이 완전히 다르답니다!
@@ -455,82 +233,32 @@ const scoreResult = calculateScore(scoreInput);
 {/* 📌 2. 내 사주의 오행 분포 */}
 <h2 className="text-lg font-bold mb-3">2. 내 사주의 오행</h2>
 <p className="text-sm text-gray-700 leading-relaxed mt-2">
-  사주는 다섯 가지 기운, 즉 <b>목(木), 화(火), 토(土), 금(金), 수(水)</b>로 이루어져 있어요.  
-  도넛 모양의 차트는 지금 {userName}님의 사주에서 어떤 기운이 많고, 어떤 기운이 부족한지를 한눈에 보여주는 거예요.  
-  쉽게 말하면, 나에게는 어떤 에너지가 넘치고, 또 어떤 에너지를 보충해야 하는지 확인하는 도구라고 생각하면 돼요.
+  사주는 다섯 가지 기운, 즉 <b>목(木), 화(火), 토(土), 금(金), 수(水)</b>로 이루어져 있어요.  <br />
+  도넛 모양의 차트는 지금 {userName}님의 사주에서 어떤 기운이 많고, <br />어떤 기운이 부족한지를 한눈에 보여주는 거예요.  <br />
+  쉽게 말하면, 나에게는 어떤 에너지가 넘치고, 또 어떤 에너지를 보충해야 하는지 확인하는 도구라고 생각하면 돼요.<br />
+</p>
+{/* 📌 2-1. 현재 사주의 오행 분포 */}
+<h3 className="text-sm font-bold text-gray-700 mt-6">📌 2-1. 현재 사주의 오행 분포</h3>
+<p className="text-sm text-gray-700 leading-relaxed mt-2">
+  현재 {userName}님의 사주에서 오행은 다음과 같이 분포되어 있어요: 
 </p>
 
 <p className="text-sm text-gray-700 leading-relaxed mt-2">
-  아래의 체크박스를 눌러보면 조금씩 다른 해석이 적용돼요:
+  깊게 보지 않아도 되고 나에게는 어떤 오행이 많구나, 부족하구나를 알고 넘어가면 됩니다. <br />
+
   <br />- <b>조후</b>: 계절에 따른 기운의 균형을 맞추는 보정이에요.
   <br />- <b>궁성 가중</b>: 사주의 핵심 별자리 같은 부분을 강조해주는 해석이에요.
-  <br />- <b>합·충</b>: 기운들이 서로 만나서 힘을 합치거나, 충돌하는 관계를 반영한 거예요.
+  <br />- <b>합·충</b>: 기운들이 서로 만나서 힘을 합치거나, 충돌하는 관계를 반영한 거예요.<br /><br />
+  가장 많은 오행은 도넛 차트 중앙에 표시되니 참고하세요! <br /><br />
+  아래의 버튼을 눌러보면 서로 다른 해석 단계가 적용돼요:<br />
 </p>
 
-      <hr className="my-4 border-t border-gray-300" />
-
-      {/* 📌 2-1. 현재 사주의 오행 분포 (도넛) */}
-      <h3 className="text-sm font-bold text-gray-700 mt-6">📌 2-1. 현재 사주의 오행 분포</h3>
-      <p className="text-sm text-gray-700 leading-relaxed mt-2">
-        아래 옵션은 사주 해석에 영향을 주는 추가 설정이에요. <br /> 깊게 보지 않아도 되고 나에게는 어떤 오행이 많구나, 부족하구나를 알고 넘어가면 됩니다. <br />
-        가장 많은 오행은 도넛 차트 중앙에 표시되니 참고하세요! <br /><br />
-        현재 {userName}님의 사주에서 오행은 다음과 같이 분포되어 있어요: </p>
-{/* 옵션 토글 */}
-<div className="mt-2 flex flex-wrap items-center gap-4 text-[12px] text-slate-700">
-  <label className="inline-flex items-center gap-1">
-    <input type="checkbox" checked={applyChohu} onChange={e=>setApplyChohu(e.target.checked)} />
-    조후
-  </label>
-  <label className="inline-flex items-center gap-1">
-    <input type="checkbox" checked={applyPalace} onChange={e=>setApplyPalace(e.target.checked)} />
-    궁성 가중
-  </label>
-  <label className="inline-flex items-center gap-1">
-    <input type="checkbox" checked={applyUnions} onChange={e=>setApplyUnions(e.target.checked)} />
-    합·충
-  </label>
-</div>
-
-{/* 도넛 3개 + 화살표 2개 */}
-<div className="mt-4 grid grid-cols-1 gap-y-6 gap-x-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)_auto_minmax(0,1fr)]">
-  <DonutChart title="원 사주" data={rawForChart} titleClassName="mt-6" />
-  <div className="hidden sm:flex items-center justify-center px-1">
-    <svg viewBox="0 0 24 24" className="h-8 w-8 sm:h-10 sm:w-10 text-slate-300">
-      <path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  </div>
-
-  <DonutChart title="조후+궁성 보정 후" data={chohuForChart} titleClassName="mt-6" />
-  <div className="hidden sm:flex items-center justify-center px-1">
-    <svg viewBox="0 0 24 24" className="h-8 w-8 sm:h-10 sm:w-10 text-slate-300">
-      <path d="M5 12h14m-6-6 6 6-6 6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  </div>
-
-  <DonutChart title="합·충 보정 후" data={adjustedElements} titleClassName="mt-6" />
-</div>
-
-
-{/* 단계별 강/약 요약 */}
-<div className="mt-3 grid gap-2 text-[12px] text-slate-600 md:grid-cols-3">
- <p>
-    <b className="text-slate-800">현재 사주</b>에서는{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(rawForChart, domRaw)}</span> 기운이 강하고,{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(rawForChart, weakRaw)}</span> 기운이 부족해요.
-  </p>
-  <p>
-    <b className="text-slate-800">조후+궁성 보정 후</b>에는{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(chohuForChart, domCP)}</span> 기운이 두드러지고,{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(chohuForChart, weakCP)}</span> 기운이 약해요.
-  </p>
-  <p>
-    <b className="text-slate-800">합·충 적용 후</b>에는{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(adjustedElements, domAdj)}</span> 기운이 강하고,{" "}
-    <span className="font-semibold text-slate-800">{formatWithPct(adjustedElements, weakAdj)}</span> 기운이 상대적으로 부족해요.
-  </p>
-</div>
-
-      <hr className="my-4 border-t border-gray-300" />
+<ElementDistributionPanel
+        rawElements={rawElements}
+        chohuPalaceElements={chohuPalaceElements}
+        adjustedElements={adjustedElements}
+        dayElement={dayElement}
+      />
 
 {/* 📌 3. 대운 */}
 <h2 className="text-lg font-bold mb-3">3. 내 사주의 대운과 십이운성</h2>
