@@ -27,3 +27,4 @@ export const rel = {
   "금": { produces:"수", producedBy:"토", controls:"목", controlledBy:"화" },
   "수": { produces:"목", producedBy:"금", controls:"화", controlledBy:"토" },
 } as const;
+
