@@ -42,7 +42,7 @@ const RELATIONS = {
 function DonutChart({
   data,
   title,
-  size = 150,
+  size = 180,
   strokeWidth = 20,
 }: {
   data: Record<ElementType, number>;
@@ -53,7 +53,7 @@ function DonutChart({
   const values = ELEMENT_ORDER.map((el) => data[el] ?? 0);
   const total = values.reduce((a, b) => a + b, 0) || 1;
 
-  const r = size / 2 - strokeWidth / 2;
+  const r = size / 2 - strokeWidth / 2 - 30;
   const c = 2 * Math.PI * r;
 
   let accRatio = 0;
@@ -73,7 +73,7 @@ function DonutChart({
 
   return (
     <div className="flex flex-col items-center">
-      <svg width={size} height={size}>
+      <svg width={size+5} height={size}>
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -99,7 +99,7 @@ function DonutChart({
               {/* 퍼센트 라벨 */}
               <text
                 x={size / 2 + (r + 28) * Math.cos(angle)}
-                y={size / 2 + (r + 28) * Math.sin(angle)}
+                y={size / 2 + (r + 23) * Math.sin(angle)}
                 textAnchor="middle"
                 fontSize="11"
                 fontWeight="bold"
@@ -132,13 +132,13 @@ function DonutChart({
 function ElementDiagram({
   dayElement,
   distribution,
-  size = 220, // ✅ 프레임 밖 안나가게 줄임
+  size = 270,
 }: {
   dayElement: ElementType;
   distribution: Record<ElementType, number>;
   size?: number;
 }) {
-  const radius = size / 2 - 50; 
+  const radius = size / 2 - 80; 
   const center = size / 2;
 
   const rotate = ELEMENT_ORDER.indexOf(dayElement);
@@ -160,6 +160,7 @@ function ElementDiagram({
 
   return (
     <svg width={size} height={size}>
+      <g transform="translate(-45, -10)"> 
       {/* ✅ 생 관계: 파란 선만 */}
 +      {RELATIONS.generate.map(([from, to], idx) => {
         const s = coords[from as ElementType]!;
@@ -195,9 +196,9 @@ function ElementDiagram({
       })}
 
       {/* ✅ 범례 추가 */}
-      <g transform={`translate(${center}, ${size - 10})`}>
-        <text x="-40" y="0" fontSize="11" fill="#3b82f6">─ 生(돕는 관계)</text>
-        <text x="40" y="0" fontSize="11" fill="#ef4444">─ 剋(제어 관계)</text>
+      <g transform={`translate(${center}, ${size - 40})`}>
+        <text x="-80" y="0" fontSize="11" fill="#3b82f6">─ 生(돕는 관계)</text>
+        <text x="0" y="0" fontSize="11" fill="#ef4444">─ 剋(제어 관계)</text>
       </g>
 
       {/* 오행 원 */}
@@ -268,6 +269,7 @@ function ElementDiagram({
           <path d="M0,0 L0,6 L6,3 z" fill="#ef4444" />
         </marker>
       </defs>
+      </g>
     </svg>
   );
 }
@@ -285,9 +287,9 @@ export default function ElementDistributionPanel({
   dayElement: ElementType;
 }) {
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-1">
       {/* 도넛 3개 + 화살표 */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-3">
         <DonutChart title="원 사주" data={rawElements} />
         <span className="text-2xl">→</span>
         <DonutChart title="조후/궁성 보정" data={chohuPalaceElements} />
@@ -296,7 +298,7 @@ export default function ElementDistributionPanel({
       </div>
 
       {/* 다이어그램 3개 + 화살표 */}
-      <div className="flex items-center justify-center gap-4">
+      <div className="flex items-center justify-center gap-1">
         <ElementDiagram dayElement={dayElement} distribution={rawElements} />
         <span className="text-2xl">→</span>
         <ElementDiagram

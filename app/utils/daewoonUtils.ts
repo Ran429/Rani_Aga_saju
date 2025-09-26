@@ -19,6 +19,9 @@ const SIXTY = Array.from({ length: 60 }, (_, i) => ({
   ji:  twelveJi[i % 12] as JiKey,
 }));
 
+const toUTCDate = (y: number, m1to12: number, d: number) =>
+  Date.UTC(y, m1to12 - 1, d); // UTC 기준 타임존 영향 제거
+
 const idxOf = (gan: GanKey, ji: JiKey) =>
   SIXTY.findIndex(p => p.gan === gan && p.ji === ji);
 
@@ -43,7 +46,7 @@ type SolarTerm = { month: number; day: number; name?: string };
 const makeTermBoundaries = (baseYear: number) =>
   (solarTerms as SolarTerm[]).map(t => {
     const y = t.month === 1 ? baseYear + 1 : baseYear;
-    return new Date(y, t.month - 1, t.day);
+    return new Date(toUTCDate(y, t.month, t.day));
   });
 
 /** 대운 시작나이(절기법) */
@@ -51,7 +54,7 @@ export function calculateDaewoonPeriod(
   birthYear: number, birthMonth: number, birthDay: number, gender: string
 ) {
   // 출생 시각(시/분까지 쓰고 싶으면 여기서 더 파싱)
-  const birth = new Date(birthYear, birthMonth - 1, birthDay);
+  const birth = new Date(toUTCDate(birthYear, birthMonth, birthDay));
 
   // 순/역행 판단: 연간의 음양 + 성별
   const { sky: yearStem } = calculateYearPillar(birthYear, birthMonth, birthDay);
@@ -75,8 +78,8 @@ export function calculateDaewoonPeriod(
   const target = forward ? nextTerm : prevTerm;
   const diffDays = Math.abs(target.getTime() - birth.getTime()) / 86400000;
 
-  // 3일 = 1년, 반올림
-  const yearsToStart = Math.round(diffDays / 3);
+  // 3일 = 1년, 올림
+  const yearsToStart = Math.ceil(diffDays / 3);
 
   return yearsToStart; // 순/역행에 따라 경계는 위에서 이미 선택
 }

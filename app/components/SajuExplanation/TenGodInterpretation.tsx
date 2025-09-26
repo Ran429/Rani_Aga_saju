@@ -30,6 +30,13 @@ const GROUPS: { label: "비겁" | "식상" | "재성" | "관성" | "인성"; mem
 ];
 
 export default function TenGodInterpretation({ data }: { data: TenGodCount }) {
+  // ✅ 1. 전체 십성 개수 합계 계산 (Total Count)
+  const totalTenGods = Object.keys(data).reduce((sum, key) => {
+    return key !== "알 수 없음" ? sum + (data[key as TenGodType] ?? 0) : sum;
+  }, 0);
+
+  // 총합이 0일 경우 나누기 방지
+  const denominator = totalTenGods > 0 ? totalTenGods : 1;
   return (
     <section className="mt-6">
       <h3 className="text-sm font-bold text-gray-700 mb-3">📌 3-2. 십성 해석</h3>
@@ -38,7 +45,7 @@ export default function TenGodInterpretation({ data }: { data: TenGodCount }) {
         <table className="min-w-full border-collapse text-xs text-slate-600">
           <thead>
             <tr className="bg-slate-50">
-              <th className="border border-slate-200 px-3 py-2 font-medium text-center w-[72px]">
+              <th className="border border-slate-200 px-3 py-2 font-medium text-center w-[90px]"> 
                 그룹
               </th>
               <th className="border border-slate-200 px-3 py-2 font-medium text-center w-[72px]">
@@ -55,6 +62,8 @@ export default function TenGodInterpretation({ data }: { data: TenGodCount }) {
           <tbody>
             {GROUPS.map(({ label, members }) => {
               const groupTotal = members.reduce((sum, m) => sum + (data[m] ?? 0), 0);
+              const groupPercentage = (groupTotal / denominator) * 100;
+
               return members.map((tg, idx) => (
                 <tr key={`${label}-${tg}`} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
                   {/* 그룹 셀: 첫 줄에만 표시 + 두 줄 병합 */}
@@ -64,8 +73,13 @@ export default function TenGodInterpretation({ data }: { data: TenGodCount }) {
                       className="border border-slate-200 px-3 py-2 text-center align-middle font-semibold text-slate-700"
                       title={`그룹 합계: ${groupTotal}`}
                     >
-                      <div className="inline-flex items-center gap-1">
+                      <div className="flex flex-col items-center gap-1">
+                        {/* 그룹 라벨 */}
                         <span>{label}</span>
+                        {/* ✅ 구성비 표시 */}
+                        <span className="text-sm font-extrabold text-blue-600">
+                            {groupPercentage.toFixed(1)}%
+                        </span>
                         <span className="rounded-full bg-slate-100 px-1.5 py-[2px] text-[10px] font-medium text-slate-700">
                           {groupTotal}
                         </span>

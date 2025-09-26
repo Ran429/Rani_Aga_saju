@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import crystalBall from "./crystal-ball.png"; // ✅ public/ 기준
 import { getSaju } from "./calculators/sajuCalculator";
@@ -84,12 +84,22 @@ export default function Home() {
   const [birthTime, setBirthTime] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [sajuResult, setSajuResult] = useState<SajuResultType | null>(null);
-
+  const resultRef = useRef<HTMLDivElement>(null); 
   const [activeSection, setActiveSection] = useState("overview");
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    if (sajuResult && resultRef.current) {
+      // 참조된 요소의 시작 부분(top)으로 부드럽게 스크롤
+      resultRef.current.scrollIntoView({
+        behavior: "smooth", 
+        block: "start",     
+      });
+    }
+  }, [sajuResult]); // sajuResult가 null이 아닐 때 실행됩니다.
 
   const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -241,7 +251,7 @@ export default function Home() {
         return (
           <>
             {/* ✅ 카드 #1: 히어로 + 인사/요약 */}
-            <div className="relative mt-4 w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 text-black">
+            <div ref={resultRef} className="relative mt-4 w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 text-black">
               <div className="relative w-full h-40 sm:h-52 md:h-64 overflow-hidden rounded-t-lg">
                 <Image
                   src={crystalBall}
