@@ -20,6 +20,9 @@ export type FourPillars = {
   day: Pillar;
   hour: Pillar;
 };
+export type IlganStrength = "극약" | "태약" | "신약" | "중화신약" | "중화신강" | "신강" | "태강" | "극왕"; // 8단계 분류
+export type FiveElementType = "목" | "화" | "토" | "금" | "수"; 
+
 
 /* ──────────────────────────────────────────────────────────
  * 특수신살/길신 표시 타입
@@ -124,6 +127,13 @@ export interface SajuResultType {
     birthMonth?: number;
     birthDay?: number;
   };
+  ilganStrength: IlganStrength; 
+  strengthCheck: {
+      deukryeong: boolean;
+      deukji: boolean;
+      deukse: boolean;
+  };
+  yongsinElements: FiveElementType[];    // ✅ 용신 오행 필드 추가
 }
 
 /* BasicStructure 컴포넌트 props */

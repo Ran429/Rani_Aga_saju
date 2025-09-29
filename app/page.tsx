@@ -92,14 +92,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (sajuResult && resultRef.current) {
-      // 참조된 요소의 시작 부분(top)으로 부드럽게 스크롤
-      resultRef.current.scrollIntoView({
-        behavior: "smooth", 
-        block: "start",     
-      });
-    }
-  }, [sajuResult]); // sajuResult가 null이 아닐 때 실행됩니다.
+      // sajuResult가 유효하고, 결과 영역(resultRef)이 존재할 때만 실행
+      if (sajuResult && resultRef.current) {
+          
+          // ✅ FIX: 50ms 지연 후 스크롤 실행 (브라우저 렌더링 완료 대기)
+          const timer = setTimeout(() => {
+              if (resultRef.current) {
+                  resultRef.current.scrollIntoView({
+                      behavior: "smooth", 
+                      block: "start", // 원하는 목적지 (결과 카드의 상단)
+                  });
+              }
+          }, 50); // 50ms (0.05초) 지연
+
+          // 컴포넌트 정리 시 타이머 제거
+          return () => clearTimeout(timer);
+      }
+  }, [sajuResult]);
 
   const handleBirthDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
@@ -377,7 +386,7 @@ export default function Home() {
             <div className="bg-white p-6 shadow-lg rounded-lg w-full max-w-2xl text-black mt-6">
               {activeSection === "overview" && (
                 <>
-                  <BasicStructure userName={user.name} sajuResult={sajuResult} sanitizedExplanation="" />
+                  <BasicStructure  id="overview" userName={user.name} sajuResult={sajuResult} sanitizedExplanation="" />
                   <TenGodInterpretation data={sajuResult.baseTenGods} />
                   <SpecialGodsSection
                     data={toSpecialGodsData([
@@ -385,6 +394,7 @@ export default function Home() {
                       ...(sajuResult.goodGods ?? []),
                     ])}
                   />
+                  <div style={{ height: '300px' }} aria-hidden="true"></div>
                 </>
               )}
               {activeSection === "love" && <LoveFortune sajuResult={sajuResult} />}

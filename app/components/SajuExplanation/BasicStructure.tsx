@@ -1,16 +1,16 @@
 /**
  * 📄 app/components/SajuExplanation/BasicStructure.tsx
- * 역할: UI 컴포넌트 (React)
+ * 역할: UI 컴포넌트 (React) - 사주의 기본 구조 및 핵심 강약 정보 표시
  * imports: react, next/image, @/app/utils/elementUtils, @/app/calculators/elementDistribution, @/app/utils/daewoonUtils, @/app/types/sajuTypes, @/app/types/sajuTypes, ./data, @/app/calculators/scoreInputBuilder, @/app/calculators/scoreCalculator
  * referenced by: app/page.tsx
  */
 // app/components/SajuExplanation/BasicStructure.tsx
 import React, { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
-import { getElement, GanKey, JiKey } from "@/app/utils/elementUtils";
+import { getElement, GanKey, JiKey, FiveElementType } from "@/app/utils/elementUtils"; // FiveElementType를 elementUtils에서 import
 import { calculateElementDistribution } from "@/app/calculators/elementDistribution";
 import { getDaewoonList } from "@/app/utils/daewoonUtils";
-import type { BasicStructureProps } from "@/app/types/sajuTypes";
+import type { BasicStructureProps } from "@/app/types/sajuTypes"; // SajuResultType을 포함
 import { splitBirthDate, normalizeGender, type Gender } from "@/app/types/sajuTypes";
 import { buildScoreInput } from "@/app/calculators/scoreInputBuilder";
 import { calculate_score_with_limits as calculateScore } from "@/app/calculators/scoreCalculator";
@@ -18,17 +18,37 @@ import { twelveFortunesDescriptions } from "@/app/utils/fortuneUtils";
 import DaewoonYearMonthPanel from "@/app/components/fortunes/DaewoonYearMonthPanel";
 import ElementDistributionPanel from "./ElementDistributionPanel";
 
-
-// ---------------- 타입/상수 ----------------
-type ElementType = "목" | "화" | "토" | "금" | "수";
-
-const elementColors: Record<ElementType, string> = {
+// 오행 색상 스타일을 결정하는 유틸리티 함수 (BasicStructure.tsx 내부에서 임시 정의 또는 유틸리티 파일에서 import)
+const elementColors: Record<FiveElementType, string> = {
   목: "bg-white border-green-400",
   화: "bg-white border-red-400",
   토: "bg-white border-yellow-400",
   금: "bg-white border-gray-400",
   수: "bg-white border-blue-400",
 };
+
+const getElementPillStyle = (element: FiveElementType) => {
+  switch (element) {
+    case '목': return 'bg-green-100 text-green-700';
+    case '화': return 'bg-red-100 text-red-700';
+    case '토': return 'bg-yellow-100 text-yellow-700';
+    case '금': return 'bg-gray-100 text-gray-700';
+    case '수': return 'bg-blue-100 text-blue-700';
+    default: return 'bg-slate-100 text-slate-700';
+  }
+};
+
+
+const StrengthCheckItem = ({ label, isChecked }: { label: string, isChecked: boolean }) => (
+  <div className="flex items-center space-x-2">
+    <span className={`text-sm font-medium ${isChecked ? 'text-blue-600' : 'text-red-600'}`}>
+      {label}
+    </span>
+    <span className={`text-lg font-bold ${isChecked ? 'text-blue-600' : 'text-red-600'}`}>
+      {isChecked ? 'O' : 'X'}
+    </span>
+  </div>
+);
 
 const skyDescriptions: Record<GanKey, string> = {
   갑: "큰 나무처럼 곧고 당당하며, 스스로 뿌리를 깊게 내리는 성향입니다.",
@@ -43,7 +63,7 @@ const skyDescriptions: Record<GanKey, string> = {
   계: "맑은 시냇물처럼 부드럽고, 상황에 맞게 흐르는 유연함을 가집니다.",
 };
 
-const getAnimalAndColor = (dayElement: ElementType, dayGround: string) => {
+const getAnimalAndColor = (dayElement: FiveElementType, dayGround: string) => {
   const animals: Record<string, string> = {
     자: "쥐", 축: "소", 인: "호랑이", 묘: "토끼", 진: "용", 사: "뱀",
     오: "말", 미: "양", 신: "원숭이", 유: "닭", 술: "개", 해: "돼지",
@@ -62,7 +82,7 @@ const getAnimalAndColor = (dayElement: ElementType, dayGround: string) => {
     개: "https://i.imgur.com/O71tkpw.png",
     돼지: "https://i.imgur.com/oaT9OTj.png",
   };
-  const colorPrefix: Record<ElementType, string> = {
+  const colorPrefix: Record<FiveElementType, string> = {
     목: "푸른 ", 화: "붉은 ", 토: "노란 ", 금: "흰 ", 수: "검은 ",
   };
   const animal = animals[dayGround] ?? "미확인 동물";
@@ -104,11 +124,15 @@ function ScoreBadge({ score, userName }: { score: number; userName: string }) {
 }
 
 // ---------------- 메인 컴포넌트 ----------------
-export default function BasicStructure({ userName, sajuResult }: BasicStructureProps) {
+export default function BasicStructure({ userName, sajuResult, id }: BasicStructureProps & { id?: string }) { 
   const daySky = sajuResult.day.sky as GanKey;
   const dayGround = sajuResult.day.ground;
-  const dayElement = getElement(daySky) as ElementType;
+  const dayElement = getElement(daySky) as FiveElementType;
   const animalData = getAnimalAndColor(dayElement, dayGround);
+  
+  // ✅ 새로 추가된 강약 및 용신 데이터 추출
+  const { ilganStrength, strengthCheck, yongsinElements } = sajuResult;
+  const { deukryeong, deukji, deukse } = strengthCheck;
 
   const { year: birthYear, month: birthMonth, day: birthDay } = splitBirthDate(sajuResult.userInfo);
   const gender: Gender = normalizeGender(sajuResult.userInfo?.gender);
@@ -120,7 +144,7 @@ export default function BasicStructure({ userName, sajuResult }: BasicStructureP
     hour:  { sky: sajuResult.hour.sky as GanKey, ground: sajuResult.hour.ground as JiKey },
   };
 
- const emptyDist: Record<ElementType, number> = {
+ const emptyDist: Record<FiveElementType, number> = {
   목: 0,
   화: 0,
   토: 0,
@@ -153,10 +177,65 @@ const {
   const scoreResult = calculateScore(scoreInput);
 
   return (
-    <section>
+    <section id={id}> 
       {/* 점수 */}
       <ScoreBadge score={scoreResult.total} userName={userName} />
       <hr className="my-4 border-t border-gray-300" />
+
+ {/* ────────────────────────────────────────────────────────── */}
+      {/* ✅ 1. 일간 강약 및 용신 정보 섹션 */}
+      {/* ────────────────────────────────────────────────────────── */}
+      <section className="bg-white p-6 rounded-xl shadow-lg border-2 border-indigo-100">
+        <h2 className="text-xl font-bold text-indigo-800 mb-4 border-b pb-2">
+          일간 강약 진단 및 용신 (핵심)
+        </h2>
+        
+        <div className="flex flex-col sm:flex-row justify-between items-center sm:space-x-8 space-y-4 sm:space-y-0">
+          
+          {/* 1-1. 일간 강약 등급 */}
+          <div className="flex-1 text-center bg-indigo-50 p-4 rounded-lg shadow-inner w-full">
+            <p className="text-sm text-indigo-600 font-semibold mb-1">일간 강약 등급 (8단계)</p>
+            <p className="text-3xl font-extrabold text-indigo-900">
+              {ilganStrength}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              {userName}님은 <span className="font-bold text-indigo-800">{ilganStrength}</span>한 사주로 진단되었습니다.
+            </p>
+          </div>
+
+          {/* 1-2. 득령/득지/득세 체크 */}
+          <div className="flex-1 p-4 rounded-lg bg-white border border-indigo-200 w-full">
+            <p className="text-sm font-semibold text-gray-700 mb-3">일간 강약 판단 기준</p>
+            <div className="flex justify-around space-x-2">
+              <StrengthCheckItem label="득령 (월지)" isChecked={deukryeong} />
+              <StrengthCheckItem label="득지 (일지)" isChecked={deukji} />
+              <StrengthCheckItem label="득세 (비인)" isChecked={deukse} />
+            </div>
+          </div>
+
+          {/* 1-3. 용신 오행 */}
+          <div className="flex-1 text-center bg-indigo-50 p-4 rounded-lg shadow-inner w-full">
+            <p className="text-sm text-indigo-600 font-semibold mb-2">사주의 균형을 위한 용신</p>
+            <div className="flex justify-center gap-2">
+                        {yongsinElements.map((el) => {
+                            const yongsinStyle = getElementPillStyle(el);
+                            return (
+                                <span key={el} className={`inline-block ${yongsinStyle} text-xl font-bold px-4 py-1.5 rounded-full shadow-md`}>
+                                    {el}
+                                </span>
+                            );
+                        })}
+                    </div>
+            <p className="text-xs text-gray-600 mt-2">
+              {userName}님의 운세 흐름에서 가장 중요한 오행입니다.
+            </p>
+          </div>
+        </div>
+      </section>
+
+
+      <hr className="my-4 border-t border-gray-300" />
+
 {/* 📌 1. 사주의 기본 구조 */}
       <h3 className="text-sm font-bold text-gray-700 mt-6">📌 1-1. 사주의 기본 구조</h3>
 <p className="mb-4 text-sm text-gray-700 leading-relaxed">
@@ -353,6 +432,7 @@ const {
     </p>
   </div>
 </div>
+
 
       <hr className="my-4 border-t border-gray-300" />
 
