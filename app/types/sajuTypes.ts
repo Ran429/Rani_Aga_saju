@@ -132,6 +132,7 @@ export interface SajuResultType {
       deukryeong: boolean;
       deukji: boolean;
       deukse: boolean;
+      deuksi: boolean;
   };
   yongsinElements: FiveElementType[];    // ✅ 용신 오행 필드 추가
 }

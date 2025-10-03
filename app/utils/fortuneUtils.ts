@@ -77,8 +77,14 @@ export function checkDeukji(daySky: GanKey, dayGround: JiKey): boolean {
 export function checkDeukse(baseTenGods: TenGodCount): boolean {
     const helperCount = (baseTenGods["정인"] ?? 0) + (baseTenGods["편인"] ?? 0) + 
                         (baseTenGods["비견"] ?? 0) + (baseTenGods["겁재"] ?? 0);
-    // 인성/비겁 합산 3개 이상을 득세 기준으로 설정
-    return helperCount >= 3; 
+    // 인성/비겁 합산 4개 이상으로 기준 강화 (신강 오진단을 줄이고 신약으로 유도)
+    return helperCount >= 4; 
+}
+
+export function checkDeuksi(daySky: GanKey, hourGround: JiKey): boolean {
+    const ilganEl = getElementFromGan(daySky);
+    const hourJiEl = getElementFromJi(hourGround);
+    return isGenerating(hourJiEl, ilganEl) || hourJiEl === ilganEl;
 }
 
 const findWeakestElementInline = (elements: Record<string, number>): FiveElementType => {
@@ -96,6 +102,22 @@ const findWeakestElementInline = (elements: Record<string, number>): FiveElement
     return weakestElement;
 };
 
+const JO_HU_MAP: Record<JiKey, FiveElementType[]> = {
+    // 寅卯辰 - 봄
+    "인": ["화"], "묘": ["화"], "진": ["수"], 
+    // 巳午未 - 여름
+    "사": ["수"], "오": ["수"], "미": ["수"],
+    // 申酉戌 - 가을
+    "신": ["화"], "유": ["화"], "술": ["수"],
+    // 亥子丑 - 겨울
+    "해": ["화"], "자": ["화"], "축": ["화"],
+};
+
+export function determineJoHuYongsin(monthGround: JiKey): FiveElementType[] {
+    return JO_HU_MAP[monthGround] ?? [];
+}
+
+
 /**
  * 일간 강약 등급에 따라 용신(가장 도움이 되는 오행)을 결정합니다.
  * (신강은 설기/극제, 신약은 생조/비화 오행 중 가장 약한 것을 용신으로 삼는 간소화 로직)
@@ -106,6 +128,7 @@ const findWeakestElementInline = (elements: Record<string, number>): FiveElement
  */
 export function determineYongsins(
     daySky: GanKey, 
+    monthGround: JiKey, // <-- 조후 계산을 위해 월지(JiKey) 추가
     strength: IlganStrength, 
     baseElements: Record<string, number>
 ): FiveElementType[] {
@@ -114,11 +137,12 @@ export function determineYongsins(
     
     let yongsins: FiveElementType[] = [];
     
+    // 1. 억부 용신 후보 계산 및 정렬
     // 1. 신강/태강/극왕 (強)
     if (["극왕", "태강", "신강", "중화신강"].includes(strength)) {
-        // ✅ FIX: let을 const로 변경 (prefer-const 오류 해결)
         const candidates: FiveElementType[] = []; 
         
+        // 신강한 사주는 힘을 빼거나 극하는 오행(식상, 관살, 재성)이 용신 후보가 됨
         candidates.push(rel[ilganEl].produces);     // 식상 (설기)
         candidates.push(rel[ilganEl].controlledBy); // 관살 (극제)
         candidates.push(rel[ilganEl].controls);     // 재성 (극제)
@@ -133,32 +157,30 @@ export function determineYongsins(
     
     // 2. 신약/태약/극약 (弱)
     else if (["극약", "태약", "신약", "중화신약"].includes(strength)) {
-        // 사용자 요청: 억부(木)와 통관(火)을 우선
-        const eokbu = ilganEl;
-        const tongwan = rel[ilganEl].produces; // 식상 (통관)
-
-        yongsins.push(eokbu);
-        yongsins.push(tongwan);
-
-        // 신약 사주에서 비겁/식상이 모두 극도로 강한 기신인 경우의 방어로직은 생략하고
-        // 요청대로 木과 火를 포함합니다.
-        
-        // *만약* 복수 용신을 결정할 명확한 기준이 없다면 가장 약한 오행을 추가합니다.
-        const weakest = findWeakestElementInline(elements);
-        if (!yongsins.includes(weakest) && yongsins.length < 2) {
-             yongsins.push(weakest);
-        }
-
+        // 신약한 사주는 일간을 돕는 인성(生助)과 비겁(比和)이 용신 후보가 됨 (억부용신)
         const inseong = rel[ilganEl].producedBy; // 인성
-        if((elements[inseong] ?? 0) < (elements[eokbu] ?? 0)) {
-            // 인성이 비겁보다 약할 경우에도 억부용신은 비겁과 인성 중 더 약한 것이므로,
-            // 인성(水)을 포함시킬 수 있는 로직은 복잡해지므로 현재는 요청대로 木, 火 출력 유지.
-        }
+        const bigeop = ilganEl;                 // 비겁
+        
+        const candidates: FiveElementType[] = [inseong, bigeop];
+
+        // 후보군 중 오행 분포(baseElements)가 가장 약한 순서대로 정렬
+        const sortedCandidates = candidates
+            .filter((el, i, arr) => arr.indexOf(el) === i) 
+            .sort((a, b) => (elements[a] ?? 0) - (elements[b] ?? 0));
+            
+        // 신약 사주에서는 인성과 비겁 중 가장 필요한 2개 반환
+        yongsins = sortedCandidates.slice(0, 2);
     } else {
         // 중화인 경우 가장 약한 오행을 용신으로 반환
         return [findWeakestElementInline(baseElements)];
     }
 
+    // 3. 조후 용신 계산 및 통합
+    const joHuYongsin = determineJoHuYongsin(monthGround);
+    
+    // 조후 용신을 1순위로 배치하고 억부 용신을 뒤에 배치 (최대 2개 반환)
+    const combined = Array.from(new Set([...joHuYongsin, ...yongsins]));
+
     // 중복 제거 후 반환
-    return Array.from(new Set(yongsins));
+    return combined.slice(0, 2);
 }

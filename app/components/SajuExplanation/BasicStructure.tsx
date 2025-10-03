@@ -41,7 +41,7 @@ const getElementPillStyle = (element: FiveElementType) => {
 
 const StrengthCheckItem = ({ label, isChecked }: { label: string, isChecked: boolean }) => (
   <div className="flex items-center space-x-2">
-    <span className={`text-sm font-medium ${isChecked ? 'text-blue-600' : 'text-red-600'}`}>
+    <span className={`text-sm font-medium whitespace-nowrap ${isChecked ? 'text-blue-600' : 'text-red-600'}`}>
       {label}
     </span>
     <span className={`text-lg font-bold ${isChecked ? 'text-blue-600' : 'text-red-600'}`}>
@@ -132,7 +132,7 @@ export default function BasicStructure({ userName, sajuResult, id }: BasicStruct
   
   // ✅ 새로 추가된 강약 및 용신 데이터 추출
   const { ilganStrength, strengthCheck, yongsinElements } = sajuResult;
-  const { deukryeong, deukji, deukse } = strengthCheck;
+  const { deukryeong, deukji, deukse, deuksi } = strengthCheck; 
 
   const { year: birthYear, month: birthMonth, day: birthDay } = splitBirthDate(sajuResult.userInfo);
   const gender: Gender = normalizeGender(sajuResult.userInfo?.gender);
@@ -187,14 +187,14 @@ const {
       {/* ────────────────────────────────────────────────────────── */}
       <section className="bg-white p-6 rounded-xl shadow-lg border-2 border-indigo-100">
         <h2 className="text-xl font-bold text-indigo-800 mb-4 border-b pb-2">
-          일간 강약 진단 및 용신 (핵심)
+          일간 강약 진단 및 용신
         </h2>
         
         <div className="flex flex-col sm:flex-row justify-between items-center sm:space-x-8 space-y-4 sm:space-y-0">
           
           {/* 1-1. 일간 강약 등급 */}
           <div className="flex-1 text-center bg-indigo-50 p-4 rounded-lg shadow-inner w-full">
-            <p className="text-sm text-indigo-600 font-semibold mb-1">일간 강약 등급 (8단계)</p>
+            <p className="text-sm text-indigo-600 font-semibold mb-1">일간 강약 등급</p>
             <p className="text-3xl font-extrabold text-indigo-900">
               {ilganStrength}
             </p>
@@ -203,19 +203,9 @@ const {
             </p>
           </div>
 
-          {/* 1-2. 득령/득지/득세 체크 */}
-          <div className="flex-1 p-4 rounded-lg bg-white border border-indigo-200 w-full">
-            <p className="text-sm font-semibold text-gray-700 mb-3">일간 강약 판단 기준</p>
-            <div className="flex justify-around space-x-2">
-              <StrengthCheckItem label="득령 (월지)" isChecked={deukryeong} />
-              <StrengthCheckItem label="득지 (일지)" isChecked={deukji} />
-              <StrengthCheckItem label="득세 (비인)" isChecked={deukse} />
-            </div>
-          </div>
-
           {/* 1-3. 용신 오행 */}
           <div className="flex-1 text-center bg-indigo-50 p-4 rounded-lg shadow-inner w-full">
-            <p className="text-sm text-indigo-600 font-semibold mb-2">사주의 균형을 위한 용신</p>
+            <p className="text-sm text-indigo-600 font-semibold mb-2">내 사주의 용신</p>
             <div className="flex justify-center gap-2">
                         {yongsinElements.map((el) => {
                             const yongsinStyle = getElementPillStyle(el);
@@ -229,6 +219,17 @@ const {
             <p className="text-xs text-gray-600 mt-2">
               {userName}님의 운세 흐름에서 가장 중요한 오행입니다.
             </p>
+          </div>
+
+                {/* 1-2. 득령/득지/득세 체크 */}
+          <div className="flex-1 p-4 rounded-lg bg-white border border-indigo-200 w-full">
+            <p className="text-sm text-indigo-600 font-semibold mb-2">일간 강약 판단 기준</p>
+            <div className="flex justify-around gap-4"> {/* space-x-2를 제거하고 gap-4 추가 */}
+              <StrengthCheckItem label="득령" isChecked={deukryeong} />
+              <StrengthCheckItem label="득지" isChecked={deukji} />
+              <StrengthCheckItem label="득시" isChecked={deuksi} /> 
+              <StrengthCheckItem label="득세" isChecked={deukse} />
+            </div>
           </div>
         </div>
       </section>
