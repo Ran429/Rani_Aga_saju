@@ -15,11 +15,11 @@ import {
 import { getTenGod, GanKey, JiKey, getHiddenStems } from "../utils/elementUtils";
 import { calculateElementDistribution } from "./elementDistribution";
 import { calculateDaewoonPeriod, getDaewoonList } from "../utils/daewoonUtils";
-import { calculateTwelveFortunes, checkDeukryeong, checkDeukji, checkDeukse, checkDeuksi, determineJoHuYongsin } from "../utils/fortuneUtils";
+import { calculateTwelveFortunes, checkDeukryeong, checkDeukji, checkDeukse, checkDeuksi, determineYongsins } from "../utils/fortuneUtils"; // Renamed for clarity
 import { checkSpecialGodsAll } from "../utils/specialGodsUtils";
 import { checkGoodGodsAll } from "../utils/goodGodsUtils";
 import { buildYearlySeun } from "../utils/dateUtils";
-import { FourPillars, IlganStrength } from "../types/sajuTypes";
+import { FourPillars, IlganStrength, FiveElementType } from "../types/sajuTypes";
 
 // 점수 관련 추가
 import { buildScoreInput } from "./scoreInputBuilder";
@@ -150,7 +150,7 @@ if (isDeukse) strengthScore += 3;     // 세력(十神)
   
   let ilganStrength: IlganStrength;
   
-  // 8단계 분류 적용 (위의 예시 점수 기준)
+  // 8단계 분류 적용 (조정된 기준: 최대 점수 약 15점)
 if (strengthScore >= 14) {
   ilganStrength = "극왕";
 } else if (strengthScore >= 11) {
@@ -170,12 +170,12 @@ if (strengthScore >= 14) {
 }
   
   const strengthCheck = { deukryeong: isDeukryeong, deukji: isDeukji, deukse: isDeukse, deuksi: isDeuksi };
-  const yongsinElements = determineJoHuYongsin(
+  const yongsinElements = determineYongsins( // Renamed callsite
     dayPillar.sky, 
     monthPillar.ground,
     ilganStrength, 
-    baseElements
-  );
+    baseElements as Record<FiveElementType, number> // Add casting for safety
+);
   const daewoonPeriod = calculateDaewoonPeriod(year, month, day, gender);
   const daewoonList = getDaewoonList(year, month, day, gender);
   const yearlySeun = buildYearlySeun(year, 101);
