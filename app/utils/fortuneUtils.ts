@@ -6,7 +6,7 @@
  * referenced by: app/calculators/sajuCalculator.ts
  */
 // src/utils/fortuneUtils.ts
-import { twelveJi, rel } from "../constants/elements";
+import { twelveJi} from "../constants/elements";
 import { GanKey, JiKey, getElementFromJi, getElementFromGan, isGenerating } from "./elementUtils";
 import { TenGodCount, FiveElementType, IlganStrength } from "@/app/types/sajuTypes";
 
@@ -87,37 +87,6 @@ export function checkDeuksi(daySky: GanKey, hourGround: JiKey): boolean {
     return isGenerating(hourJiEl, ilganEl) || hourJiEl === ilganEl;
 }
 
-const findWeakestElementInline = (elements: Record<string, number>): FiveElementType => {
-    const allElements: FiveElementType[] = ["목", "화", "토", "금", "수"];
-    let minCount = Infinity;
-    let weakestElement: FiveElementType = "토"; 
-    
-    for (const el of allElements) {
-        const count = elements[el] ?? 0;
-        if (count < minCount) {
-            minCount = count;
-            weakestElement = el;
-        }
-    }
-    return weakestElement;
-};
-
-const JO_HU_MAP: Record<JiKey, FiveElementType[]> = {
-    // 寅卯辰 - 봄
-    "인": ["화"], "묘": ["화"], "진": ["수"], 
-    // 巳午未 - 여름
-    "사": ["수"], "오": ["수"], "미": ["수"],
-    // 申酉戌 - 가을
-    "신": ["화"], "유": ["화"], "술": ["수"],
-    // 亥子丑 - 겨울
-    "해": ["화"], "자": ["화"], "축": ["화"],
-};
-
-export function determineJoHuYongsin(monthGround: JiKey): FiveElementType[] {
-    return JO_HU_MAP[monthGround] ?? [];
-}
-
-
 /**
  * 일간 강약 등급에 따라 용신(가장 도움이 되는 오행)을 결정합니다.
  * (신강은 설기/극제, 신약은 생조/비화 오행 중 가장 약한 것을 용신으로 삼는 간소화 로직)
@@ -126,61 +95,71 @@ export function determineJoHuYongsin(monthGround: JiKey): FiveElementType[] {
  * @param baseElements 오행 분포 (가중치 적용된 baseElements)
  * @returns 용신 오행 (FiveElementType)
  */
-export function determineYongsins(
-    daySky: GanKey, 
-    monthGround: JiKey, // <-- 조후 계산을 위해 월지(JiKey) 추가
-    strength: IlganStrength, 
-    baseElements: Record<string, number>
+
+// 🔹 조후용신 기본 매핑
+const JO_HU_MAP: Record<string, { main: FiveElementType; sub?: FiveElementType }> = {
+  "寅": { main: "화", sub: "목" }, // 봄
+  "卯": { main: "화", sub: "목" },
+  "辰": { main: "목", sub: "화" },
+
+  "巳": { main: "토", sub: "화" }, // 여름
+  "午": { main: "토", sub: "화" },
+  "未": { main: "토", sub: "화" },
+
+  "申": { main: "금", sub: "수" }, // 가을
+  "酉": { main: "금", sub: "수" },
+  "戌": { main: "화", sub: "토" },
+
+  "亥": { main: "목", sub: "수" }, // 겨울
+  "子": { main: "수", sub: "목" },
+  "丑": { main: "수", sub: "토" },
+};
+
+function determineEokbu(ilganStrength: IlganStrength, baseElements: Record<FiveElementType, number>): FiveElementType {
+  // 일간이 신약이면 → 같은 오행(비겁) + 생해주는 오행(인성)
+  // 일간이 신강이면 → 극하는 오행(재·관) + 누르는 오행
+  // 단순화: 부족 오행 우선
+  const sorted = Object.entries(baseElements).sort((a, b) => a[1] - b[1]); 
+  return sorted[0][0] as FiveElementType;
+}
+
+// 🔹 조후용신 계산
+function determineJoHu(monthBranch: string): FiveElementType {
+  const mapping = JO_HU_MAP[monthBranch];
+  return mapping?.main ?? "토"; // 기본 안전값
+}
+
+// 🔹 최종 용신 결정
+export function determineJoHuYongsin(
+  dayStem: string,
+  monthBranch: string,
+  ilganStrength: IlganStrength,
+  baseElements: Record<FiveElementType, number>
 ): FiveElementType[] {
-    const ilganEl = getElementFromGan(daySky);
-    const elements: Record<string, number> = baseElements;
-    
-    let yongsins: FiveElementType[] = [];
-    
-    // 1. 억부 용신 후보 계산 및 정렬
-    // 1. 신강/태강/극왕 (強)
-    if (["극왕", "태강", "신강", "중화신강"].includes(strength)) {
-        const candidates: FiveElementType[] = []; 
-        
-        // 신강한 사주는 힘을 빼거나 극하는 오행(식상, 관살, 재성)이 용신 후보가 됨
-        candidates.push(rel[ilganEl].produces);     // 식상 (설기)
-        candidates.push(rel[ilganEl].controlledBy); // 관살 (극제)
-        candidates.push(rel[ilganEl].controls);     // 재성 (극제)
-        
-        // 후보군 중 가장 약한 두 오행 선택 (복수 용신 허용)
-        const sortedCandidates = candidates
-            .filter((el, i, arr) => arr.indexOf(el) === i) 
-            .sort((a, b) => (elements[a] ?? 0) - (elements[b] ?? 0));
-            
-        yongsins = sortedCandidates.slice(0, 2);
-    } 
-    
-    // 2. 신약/태약/극약 (弱)
-    else if (["극약", "태약", "신약", "중화신약"].includes(strength)) {
-        // 신약한 사주는 일간을 돕는 인성(生助)과 비겁(比和)이 용신 후보가 됨 (억부용신)
-        const inseong = rel[ilganEl].producedBy; // 인성
-        const bigeop = ilganEl;                 // 비겁
-        
-        const candidates: FiveElementType[] = [inseong, bigeop];
+  const joHu = determineJoHu(monthBranch); // 계절 조후
+  const eokbu = determineEokbu(ilganStrength, baseElements); // 억부
 
-        // 후보군 중 오행 분포(baseElements)가 가장 약한 순서대로 정렬
-        const sortedCandidates = candidates
-            .filter((el, i, arr) => arr.indexOf(el) === i) 
-            .sort((a, b) => (elements[a] ?? 0) - (elements[b] ?? 0));
-            
-        // 신약 사주에서는 인성과 비겁 중 가장 필요한 2개 반환
-        yongsins = sortedCandidates.slice(0, 2);
-    } else {
-        // 중화인 경우 가장 약한 오행을 용신으로 반환
-        return [findWeakestElementInline(baseElements)];
-    }
+  return mergeYongsin(ilganStrength, joHu, eokbu);
+}
 
-    // 3. 조후 용신 계산 및 통합
-    const joHuYongsin = determineJoHuYongsin(monthGround);
-    
-    // 조후 용신을 1순위로 배치하고 억부 용신을 뒤에 배치 (최대 2개 반환)
-    const combined = Array.from(new Set([...joHuYongsin, ...yongsins]));
-
-    // 중복 제거 후 반환
-    return combined.slice(0, 2);
+// 🔹 조후·억부 병합 규칙
+export function mergeYongsin(
+  ilganStrength: IlganStrength,
+  joHu: FiveElementType,
+  eokbu: FiveElementType
+): FiveElementType[] {
+  if (ilganStrength.includes("신강")) {
+    // 신강 계열: 조후 → 억부
+    return joHu === eokbu ? [joHu] : [joHu, eokbu];
+  }
+  if (ilganStrength.includes("신약")) {
+    // 신약 계열: 억부 → (조건부) 조후
+    return joHu === eokbu ? [eokbu] : [eokbu, joHu];
+  }
+  if (ilganStrength.includes("중화")) {
+    // 중화: 부족 오행 위주
+    return joHu === eokbu ? [joHu] : [joHu, eokbu];
+  }
+  // 태약/극약 등은 신약과 동일 처리
+  return joHu === eokbu ? [eokbu] : [eokbu, joHu];
 }

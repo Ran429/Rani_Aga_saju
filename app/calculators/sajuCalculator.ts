@@ -15,7 +15,7 @@ import {
 import { getTenGod, GanKey, JiKey, getHiddenStems } from "../utils/elementUtils";
 import { calculateElementDistribution } from "./elementDistribution";
 import { calculateDaewoonPeriod, getDaewoonList } from "../utils/daewoonUtils";
-import { calculateTwelveFortunes, checkDeukryeong, checkDeukji, checkDeukse, checkDeuksi, determineYongsins } from "../utils/fortuneUtils";
+import { calculateTwelveFortunes, checkDeukryeong, checkDeukji, checkDeukse, checkDeuksi, determineJoHuYongsin } from "../utils/fortuneUtils";
 import { checkSpecialGodsAll } from "../utils/specialGodsUtils";
 import { checkGoodGodsAll } from "../utils/goodGodsUtils";
 import { buildYearlySeun } from "../utils/dateUtils";
@@ -140,10 +140,10 @@ const isDeukryeong = checkDeukryeong(dayPillar.sky, monthPillar.ground);
                           (baseTenGods["식신"] ?? 0) + (baseTenGods["상관"] ?? 0);
   
   let strengthScore = 0;
-  if (isDeukryeong) strengthScore += 5; // (월지)
-  if (isDeukji) strengthScore += 3;  // (일지)
-  if (isDeuksi) strengthScore += 2;  // (시지)
-  if (isDeukse) strengthScore += 4;  // (총합)
+if (isDeukryeong) strengthScore += 6; // 월지
+if (isDeukji) strengthScore += 4;     // 일지
+if (isDeuksi) strengthScore += 2;     // 시지
+if (isDeukse) strengthScore += 3;     // 세력(十神)
   
   // 일간을 극하는 힘이 강할수록 점수 감점 (예시: 6개 중 5개 이상일 때 5점 감점)
   if (oppositionCount >= 5) strengthScore -= 3; 
@@ -151,32 +151,31 @@ const isDeukryeong = checkDeukryeong(dayPillar.sky, monthPillar.ground);
   let ilganStrength: IlganStrength;
   
   // 8단계 분류 적용 (위의 예시 점수 기준)
-  if (strengthScore >= 19) {
-    ilganStrength = "극왕";
-  } else if (strengthScore >= 15) {
-    ilganStrength = "태강";
-  } else if (strengthScore >= 10) {
-    ilganStrength = "신강";
-  } else if (strengthScore >= 6) {
-    ilganStrength = "중화신강";
-  } else if (strengthScore >= -3) { // Adjusted to 1 to match external '중화신약' logic
-    ilganStrength = "중화신약";
-  } else if (strengthScore >= -6) {
-    ilganStrength = "신약";
-  } else if (strengthScore >= -9) {
-    ilganStrength = "태약";
-  } else {
-    ilganStrength = "극약";
-  }
+if (strengthScore >= 14) {
+  ilganStrength = "극왕";
+} else if (strengthScore >= 11) {
+  ilganStrength = "태강";
+} else if (strengthScore >= 8) {
+  ilganStrength = "신강";
+} else if (strengthScore >= 5) {
+  ilganStrength = "중화신강";
+} else if (strengthScore >= 2) {
+  ilganStrength = "중화신약";
+} else if (strengthScore >= -1) {
+  ilganStrength = "신약";
+} else if (strengthScore >= -4) {
+  ilganStrength = "태약";
+} else {
+  ilganStrength = "극약";
+}
   
   const strengthCheck = { deukryeong: isDeukryeong, deukji: isDeukji, deukse: isDeukse, deuksi: isDeuksi };
-  const yongsinElements = determineYongsins(
+  const yongsinElements = determineJoHuYongsin(
     dayPillar.sky, 
-    monthPillar.ground, // ADDED for Jo-Hu Yongsin
+    monthPillar.ground,
     ilganStrength, 
-    baseElements // 오행 분포 기반으로 용신 결정
-);
-
+    baseElements
+  );
   const daewoonPeriod = calculateDaewoonPeriod(year, month, day, gender);
   const daewoonList = getDaewoonList(year, month, day, gender);
   const yearlySeun = buildYearlySeun(year, 101);

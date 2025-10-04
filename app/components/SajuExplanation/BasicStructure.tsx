@@ -222,9 +222,10 @@ const {
           </div>
 
                 {/* 1-2. 득령/득지/득세 체크 */}
+                    {/* 1-2. 득령/득지/득시/득세 체크 */}
           <div className="flex-1 p-4 rounded-lg bg-white border border-indigo-200 w-full">
             <p className="text-sm text-indigo-600 font-semibold mb-2">일간 강약 판단 기준</p>
-            <div className="flex justify-around gap-4"> {/* space-x-2를 제거하고 gap-4 추가 */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2"> {/* ✅ 2x2 그리드 레이아웃으로 변경하여 찌그러짐 방지 */}
               <StrengthCheckItem label="득령" isChecked={deukryeong} />
               <StrengthCheckItem label="득지" isChecked={deukji} />
               <StrengthCheckItem label="득시" isChecked={deuksi} /> 
